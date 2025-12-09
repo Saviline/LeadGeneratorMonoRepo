@@ -1,0 +1,5 @@
+spring:
+  data:
+    mongodb:
+      # Connects to 'formschema-mongo' container via port 27018
+      uri: mongodb://localhost:27017/formschema_db
