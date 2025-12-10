@@ -15,4 +15,8 @@ public class FormSchemaService {
     public FormSchema getSchemaById(String id) {
         return repository.findFormSchemaById(id);
     }
+
+    public Boolean deleteSchemaById(String id) {
+        return repository.deleteFormSchema(id);
+    }
 }
