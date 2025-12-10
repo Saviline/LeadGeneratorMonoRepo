@@ -27,3 +27,16 @@ java {
 tasks.named<Test>("test") {
     useJUnitPlatform()
 }
+
+tasks.withType<Test> {
+    testLogging {
+        // This is the key line:
+        showStandardStreams = true 
+
+        // Optional: formatting to make it look nicer
+        events("passed", "skipped", "failed")
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+    }
+}

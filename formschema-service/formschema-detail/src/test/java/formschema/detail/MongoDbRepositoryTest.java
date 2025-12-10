@@ -1,4 +1,4 @@
-package formschema;
+package formschema.detail;
 import formschema.core.models.FormSchema;
 import formschema.detail.mongodb.MongoDBFormSchemaRepository;
 

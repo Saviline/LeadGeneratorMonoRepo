@@ -1,7 +1,7 @@
 
 plugins {
     id("java-common-conventions")
-    id("org.springframework.boot") version "4.0.0"
+    id("org.springframework.boot") version "3.4.0"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -9,7 +9,7 @@ plugins {
 dependencyManagement {
     imports {
         // The "Newest" Version (Released Nov 2025)
-        mavenBom("org.springframework.boot:spring-boot-dependencies:4.0.0")
+        mavenBom("org.springframework.boot:spring-boot-dependencies:3.4.0")
     }
 }
 
@@ -17,6 +17,12 @@ dependencyManagement {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+
+    testImplementation(platform("org.testcontainers:testcontainers-bom:1.19.7"))
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:mongodb")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+
     implementation(project(":formschema-core"))
     implementation(project(":formschema-detail"))
 }
