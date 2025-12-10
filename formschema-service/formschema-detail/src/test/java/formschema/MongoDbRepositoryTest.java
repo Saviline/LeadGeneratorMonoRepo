@@ -3,7 +3,6 @@ import formschema.core.models.FormSchema;
 import formschema.detail.mongodb.MongoDBFormSchemaRepository;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestReporter;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
