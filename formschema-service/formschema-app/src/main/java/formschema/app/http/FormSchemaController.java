@@ -2,11 +2,13 @@ package formschema.app.http;
 
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import formschema.core.models.FormSchema;
 import formschema.core.services.FormSchemaService;
 import formschema.core.services.SchemaTranslatorService;
+import formschema.detail.rabbitmq.FormSchemaProducer;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -16,9 +18,17 @@ public class FormSchemaController {
 
     private final FormSchemaService formSchemaService;
     private final SchemaTranslatorService SchemaTranslatorService;
+    private final FormSchemaProducer formSchemaProducer;
 
     // POST /api/schemas
     // The Client sends the JSON we designed earlier
+
+    //Routing key
+    @Value("${rabbitmq.routingkey.name}")
+    String routingKey;
+
+    @Value("${rabbitmq.exchange.name}")
+    String exchange;
 
     @PostMapping
     public String createSchema(@RequestBody FormSchema schema) {
@@ -28,7 +38,11 @@ public class FormSchemaController {
         // (e.g. check that 'mapTo' points to a valid internal field)
         
         // 3. Save to MongoDB
-        return formSchemaService.createSchema(schema);
+        String id = formSchemaService.createSchema(schema);
+
+        formSchemaProducer.sendFormSchemaMessage(exchange, routingKey, "New FormSchema created with ID: " + id);
+
+        return id;
     }
 
     // GET /api/schemas/{id}
