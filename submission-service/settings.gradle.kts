@@ -12,3 +12,5 @@ plugins {
 
 rootProject.name = "submission-service"
 include("submission-app")
+include("submission-core")
+include("submission-detail")

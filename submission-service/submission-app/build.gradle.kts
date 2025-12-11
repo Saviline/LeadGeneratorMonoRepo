@@ -22,5 +22,9 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:mongodb")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+    implementation(project(":submission-core"))
+    implementation(project(":submission-detail"))
+
 }
 
