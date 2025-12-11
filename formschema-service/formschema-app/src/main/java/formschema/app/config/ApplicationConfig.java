@@ -1,5 +1,6 @@
 package formschema.app.config;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import formschema.core.services.FormSchemaService;
@@ -9,6 +10,7 @@ import formschema.core.models.FormSchema;
 
 import org.springframework.data.mongodb.core.MongoTemplate;
 import formschema.detail.mongodb.MongoDBFormSchemaRepository;
+import formschema.detail.rabbitmq.FormSchemaProducer;
 
 @Configuration
 public class ApplicationConfig {
@@ -30,5 +32,10 @@ public class ApplicationConfig {
      @Bean
     public SchemaTranslatorService schemaTranslatorService() {
         return new SchemaTranslatorService();
+    }
+
+     @Bean
+    public FormSchemaProducer formSchemaProducer(RabbitTemplate rabbitTemplate) {
+        return new FormSchemaProducer(rabbitTemplate);
     }
 }
