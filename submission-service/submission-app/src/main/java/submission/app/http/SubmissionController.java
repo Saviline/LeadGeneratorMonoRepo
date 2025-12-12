@@ -4,7 +4,6 @@ package submission.app.http;
 import java.util.Map;
 
 import org.slf4j.Logger;
-import org.springframework.boot.autoconfigure.cache.CacheProperties.Redis;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,15 +28,17 @@ public class SubmissionController {
         if(submissionData.isEmpty())
             throw new IllegalArgumentException("Submission data cannot be empty");
 
-        String schemaName = submissionData.get("name").toString();
+        String schemaName = submissionData.get("schemaId").toString();
+
         logger.info("Received submission for schema: " + schemaName);
 
         //Retrieve the form schema from the repository
-        var schema = repository.getFormSchemaByName(schemaName);
-        logger.info("Retrieved schema: " + schema.getName());
+        String schema = repository.getFormSchemaByName(schemaName);
+
+        logger.info("Retrieved schema: " + schema);
 
         try {
-        	validatorService.validate(submissionData, schema);
+            validatorService.validate(submissionData, schema);
         } catch (ValidationException e) {
         	e.printStackTrace();
         }

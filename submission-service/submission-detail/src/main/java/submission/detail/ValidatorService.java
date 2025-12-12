@@ -1,45 +1,40 @@
 package submission.detail;
 
 import java.util.Map;
+import java.util.Set;
 
-import submission.detail.dto.FieldDefinition;
-import submission.detail.dto.FormSchema;
-import submission.detail.dto.ValidationException;
-import submission.detail.dto.ValidationRules;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
+import com.networknt.schema.ValidationMessage;
 
 public class ValidatorService {
 
-    public void validate(Map<String, Object> submissionData, FormSchema schema) {
+    private final JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    // Look! No "FormSchema" object here. Just a JSON String.
+    public void validate(Map<String, Object> submissionPayload, String standardSchemaJson) {
         
-        // Loop through the RULES (The Schema)
-        for (FieldDefinition field : schema.getFields()) {
+        try {
+            // 1. Parse the Standard Rules
+            JsonSchema schema = factory.getSchema(standardSchemaJson);
             
-            // 1. Get the actual user input for this field
-            Object value = submissionData.get(field.getKey());
-            ValidationRules rules = field.getValidation();
-
-            // 2. Check "Required"
-            if (rules.isRequired() && (value == null || value.toString().isEmpty())) {
-                throw new ValidationException(field.getKey(), rules.getErrorMessage());
+            // 2. Convert Map -> JsonNode
+            JsonNode jsonNode = mapper.valueToTree(submissionPayload);
+            
+            // 3. Validate
+            Set<ValidationMessage> errors = schema.validate(jsonNode);
+            
+            if (!errors.isEmpty()) {
+                throw new IllegalArgumentException("Validation Failed: " + errors);
             }
-
-            // If value is null and not required, skip other checks
-            if (value == null) continue;
-
-            // 3. Check "Regex" (Dynamic Pattern Matching)
-            if (rules.getRegex() != null) {
-                if (!value.toString().matches(rules.getRegex())) {
-                throw new ValidationException(field.getKey(), rules.getErrorMessage());
-                }
-            }
-
-            // 4. Check "Min/Max" (Numeric Logic)
-            if (field.getType().equals("number")) {
-                int numVal = Integer.parseInt(value.toString());
-                if (rules.getMin() != null && numVal < rules.getMin()) {
-                    throw new ValidationException(field.getKey(), rules.getErrorMessage());
-                }
-            }
+            
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e.getMessage());
         }
     }
 }

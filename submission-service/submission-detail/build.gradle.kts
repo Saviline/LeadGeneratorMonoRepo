@@ -21,5 +21,6 @@ dependencies{
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("org.springframework.boot:spring-boot-starter-amqp")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+     implementation("com.networknt:json-schema-validator:1.0.87")
     implementation(project(":submission-core"))
 }

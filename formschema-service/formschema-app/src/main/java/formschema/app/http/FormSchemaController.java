@@ -1,13 +1,9 @@
 package formschema.app.http;
 
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import formschema.core.models.FormSchema;
 import formschema.core.services.FormSchemaService;
-import formschema.core.services.SchemaTranslatorService;
 import formschema.detail.rabbitmq.FormSchemaProducer;
 import lombok.RequiredArgsConstructor;
 
@@ -17,14 +13,7 @@ import lombok.RequiredArgsConstructor;
 public class FormSchemaController {
 
     private final FormSchemaService formSchemaService;
-    private final SchemaTranslatorService SchemaTranslatorService;
     private final FormSchemaProducer formSchemaProducer;
-    
-    @Value("${rabbitmq.routingkey.name}")
-    String routingKey;
-
-    @Value("${rabbitmq.exchange.name}")
-    String exchange;
 
     @PostMapping
     public String createSchema(@RequestBody FormSchema schema) {
@@ -36,7 +25,7 @@ public class FormSchemaController {
         // 3. Save to MongoDB
         String id = formSchemaService.createSchema(schema);
 
-        formSchemaProducer.sendFormSchemaMessage(exchange, routingKey, schema);
+        formSchemaProducer.sendFormSchemaMessage(schema);
 
         return id;
     }
@@ -45,15 +34,6 @@ public class FormSchemaController {
     @GetMapping("/{id}")
     public FormSchema getSchema(@PathVariable String id) {
         return formSchemaService.getSchemaById(id);
-    }
-
-
-    @GetMapping("/json/{id}")
-    public Map<String, Object> getSubmissionPayload(@PathVariable String id) {
-        
-        FormSchema schema = formSchemaService.getSchemaById(id);
-
-        return SchemaTranslatorService.generateSubmissionPayload(schema);
     }
 
 }   

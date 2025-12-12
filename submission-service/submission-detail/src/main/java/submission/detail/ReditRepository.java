@@ -1,21 +1,17 @@
 package submission.detail;
 
-import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
-import submission.detail.dto.FormSchema;
 
 public class ReditRepository {
 
-    List<FormSchema> formSchemas = new java.util.ArrayList<>();
+    final ConcurrentHashMap<String, String> SCHEMA_STORE = new ConcurrentHashMap<>();
 
-    public void saveFormSchema(FormSchema schema) {
-        formSchemas.add(schema);
+    public void saveFormSchema(String name, String schemaJson) {
+        SCHEMA_STORE.put(name, schemaJson);
     }
 
-    public FormSchema getFormSchemaByName(String name) {
-        return formSchemas.stream()
-                .filter(schema -> schema.getName().equals(name))
-                .findFirst()
-                .orElse(null);
+    public String getFormSchemaByName(String name) {
+        return SCHEMA_STORE.get(name);
     }
 }
