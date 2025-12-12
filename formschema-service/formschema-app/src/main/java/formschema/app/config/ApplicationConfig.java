@@ -4,11 +4,12 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import formschema.core.services.FormSchemaService;
-import formschema.core.services.SchemaTranslatorService;
 import formschema.core.interfaces.IFormSchemaRepository;
 import formschema.core.models.FormSchema;
 
 import org.springframework.data.mongodb.core.MongoTemplate;
+
+import formschema.detail.SchemaTranslator;
 import formschema.detail.mongodb.MongoDBFormSchemaRepository;
 import formschema.detail.rabbitmq.FormSchemaProducer;
 
@@ -30,8 +31,8 @@ public class ApplicationConfig {
     }
 
      @Bean
-    public SchemaTranslatorService schemaTranslatorService() {
-        return new SchemaTranslatorService();
+    public SchemaTranslator schemaTranslator() {
+        return new SchemaTranslator();
     }
 
      @Bean

@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class Submission {
 
-    private String id; 
+    
 
     private String campaignId;
 
