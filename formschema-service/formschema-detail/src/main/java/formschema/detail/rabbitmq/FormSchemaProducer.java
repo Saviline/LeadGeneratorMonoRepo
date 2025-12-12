@@ -4,6 +4,7 @@ import java.util.logging.Logger;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
+import formschema.core.models.FormSchema;
 import lombok.RequiredArgsConstructor;
 
 
@@ -16,10 +17,10 @@ public class FormSchemaProducer {
     Logger logger = Logger.getLogger(FormSchemaProducer.class.getName());
 
     //Send a message to a specific queue
-    public void sendFormSchemaMessage(String exchange,String routingKey, String message){
+    public void sendFormSchemaMessage(String exchange,String routingKey, FormSchema schema){
 
-        rabbitTemplate.convertAndSend(exchange, routingKey, message);
+        rabbitTemplate.convertAndSend(exchange, routingKey, schema);
         
-        logger.info("Sent message to queue " + routingKey + ": " + message);
+        logger.info("Sent message to queue " + routingKey + ": " + schema.getName());
     }
 }

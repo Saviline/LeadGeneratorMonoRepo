@@ -19,11 +19,7 @@ public class FormSchemaController {
     private final FormSchemaService formSchemaService;
     private final SchemaTranslatorService SchemaTranslatorService;
     private final FormSchemaProducer formSchemaProducer;
-
-    // POST /api/schemas
-    // The Client sends the JSON we designed earlier
-
-    //Routing key
+    
     @Value("${rabbitmq.routingkey.name}")
     String routingKey;
 
@@ -40,7 +36,7 @@ public class FormSchemaController {
         // 3. Save to MongoDB
         String id = formSchemaService.createSchema(schema);
 
-        formSchemaProducer.sendFormSchemaMessage(exchange, routingKey, "New FormSchema created with ID: " + id);
+        formSchemaProducer.sendFormSchemaMessage(exchange, routingKey, schema);
 
         return id;
     }

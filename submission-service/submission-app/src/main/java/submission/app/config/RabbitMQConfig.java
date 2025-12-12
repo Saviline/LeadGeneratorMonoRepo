@@ -4,9 +4,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import submission.detail.FormSchemaListener;
-
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.Binding;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +38,8 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public FormSchemaListener formSchemaListener() {
-        return new FormSchemaListener();
+    public Jackson2JsonMessageConverter jsonMessageConverter() {
+       Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
+        return converter;
     }
 }
