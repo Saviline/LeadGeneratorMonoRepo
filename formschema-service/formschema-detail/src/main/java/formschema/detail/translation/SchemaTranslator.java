@@ -7,12 +7,13 @@ import java.util.Map;
 
 import formschema.core.domain.FormField;
 import formschema.core.domain.FormSchema;
+import formschema.core.ports.outbound.ITranslator;
 
-public class SchemaTranslator {
+public class SchemaTranslator implements ITranslator<Map<String, Object>> {
 
-    // Output: Standard Draft-7 JSON String
-    public Map<String, Object> toValidationPayload(FormSchema schema) {
-        Map<String, Object> jsonSchema = new HashMap<>();
+    @Override
+    public Map<String, Object> convertToValidationSchema(FormSchema schema) {
+         Map<String, Object> jsonSchema = new HashMap<>();
         jsonSchema.put("$schema", "http://json-schema.org/draft-07/schema#");
         jsonSchema.put("type", "object");
         
@@ -48,5 +49,10 @@ public class SchemaTranslator {
         payload.put("validationSchema", jsonSchema); // <--- The Standard format
         
         return payload;
+    }
+
+    @Override
+    public Map<String, Object> convertToBusinessRuleSchema(FormSchema schema) {
+        throw new UnsupportedOperationException("Unimplemented method 'convertToBusinessRuleSchema'");
     }
 }

@@ -4,7 +4,6 @@ import org.springframework.web.bind.annotation.*;
 
 import formschema.core.application.FormSchemaService;
 import formschema.core.domain.FormSchema;
-import formschema.detail.messaging.FormSchemaProducer;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -13,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 public class FormSchemaController {
 
     private final FormSchemaService formSchemaService;
-    private final FormSchemaProducer formSchemaProducer;
 
     @PostMapping
     public String createSchema(@RequestBody FormSchema schema) {
@@ -24,8 +22,6 @@ public class FormSchemaController {
         
         // 3. Save to MongoDB
         String id = formSchemaService.createSchema(schema);
-
-        formSchemaProducer.sendFormSchemaMessage(schema);
 
         return id;
     }

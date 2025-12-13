@@ -1,0 +1,31 @@
+package formschema.detail.messaging.events;
+import java.time.Instant;
+import java.util.UUID;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+
+@Data
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public abstract class EventBase {
+    private String eventId;
+    private String eventType;
+    private Instant timestamp;
+    private String correlationId;
+
+    private String schemaId;
+    private String schemaVersion;
+
+    public void initializeMetadata(String eventType, String schemaId, String version) {
+        this.eventId = UUID.randomUUID().toString();
+        this.eventType = eventType;
+        this.timestamp = Instant.now();
+        this.schemaId = schemaId;
+        this.schemaVersion = version;
+    }
+}

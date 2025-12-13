@@ -1,37 +1,44 @@
 package formschema.detail.messaging;
-
-import java.util.logging.Logger;
-
+import java.util.Map;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
-
 import formschema.core.domain.FormSchema;
-import formschema.detail.translation.SchemaTranslator;
+import formschema.core.ports.outbound.IPublisher;
+import formschema.core.ports.outbound.ITranslator;
+import formschema.detail.messaging.events.SchemaValidationUpdatedEvent;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
-
+@Slf4j
 @RequiredArgsConstructor
-public class FormSchemaProducer {
-    //Routing key
-    @Value("${rabbitmq.submission.routingkey.name}")
-    String routingKeySubmission;
+public class FormSchemaProducer implements IPublisher {
 
-    @Value("${rabbitmq.exchange.name}")
-    String exchange;
+    private final String exchange;
+    private final String validationRoutingKey;
+    private final String businessRoutingKey;
 
-    SchemaTranslator schemaTranslator = new SchemaTranslator();
-
+    private final ITranslator<Map<String, Object>> schemaTranslator;
     private final RabbitTemplate rabbitTemplate;
 
-    Logger logger = Logger.getLogger(FormSchemaProducer.class.getName());
+    @Override
+    public void PublishSchema(FormSchema schema) {
+        String correlationId = java.util.UUID.randomUUID().toString();
 
-    //Send a message to a specific queue
-    public void sendFormSchemaMessage(FormSchema schema){
+        //Publish to submission
+        publishValidationEvent(schema, correlationId);
+    }
 
-        var validation = schemaTranslator.toValidationPayload(schema);
-        
-        rabbitTemplate.convertAndSend(exchange, routingKeySubmission, validation);
-        
-        logger.info("Sent message to queue " + routingKeySubmission + ": " + schema.getName());
+    private void publishValidationEvent(FormSchema schema, String correlationId){
+        SchemaValidationUpdatedEvent event = SchemaValidationUpdatedEvent.builder()
+        .eventId(java.util.UUID.randomUUID().toString())
+        .eventType("schema.validation.updated")
+        .timestamp(java.time.Instant.now())
+        .correlationId(correlationId)
+        .schemaId(schema.getId())
+        .schemaVersion(schema.getVersion())
+        .validationSchema(schemaTranslator.convertToValidationSchema(schema).toString())
+        .build();
+
+        rabbitTemplate.convertAndSend(exchange,  validationRoutingKey, event);
+        log.info("Published schema.validation.updated: schemaId={}", schema.getId());
     }
 }

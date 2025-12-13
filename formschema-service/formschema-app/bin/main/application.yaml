@@ -1,0 +1,21 @@
+# MongoDB Configuration
+spring:
+  application:
+    name: formschema-service
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/formschema_db
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: user
+    password: user
+
+rabbitmq:
+  exchange: leadgen.exchange
+  validation:
+    queue: q.submission.schema.validation
+    routing-key: schema.validation.updated
+  business:
+    queue: q.lead.schema.business
+    routing-key: schema.business.updated
