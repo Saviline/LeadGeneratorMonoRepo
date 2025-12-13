@@ -1,6 +1,6 @@
 package formschema.detail;
-import formschema.core.models.FormSchema;
-import formschema.detail.inmemory.InMemoryFormSchemaRepository;
+import formschema.core.domain.FormSchema;
+import formschema.detail.persistence.inmemory.InMemoryFormSchemaRepository;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

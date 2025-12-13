@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import formschema.core.models.FormSchema;
+import formschema.core.domain.FormSchema;
 
 @Testcontainers
 public class FormSchemaServiceApplicationTest extends BaseIntegration 

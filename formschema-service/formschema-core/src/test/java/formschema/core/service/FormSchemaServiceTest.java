@@ -2,10 +2,10 @@ package formschema.core.service;
 
 import org.junit.jupiter.api.Test;
 
+import formschema.core.application.FormSchemaService;
+import formschema.core.domain.FormSchema;
 import formschema.core.fake.FakeFormSchemaRepository;
-import formschema.core.interfaces.IFormSchemaRepository;
-import formschema.core.models.FormSchema;
-import formschema.core.services.FormSchemaService;
+import formschema.core.ports.outbound.IFormSchemaRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;

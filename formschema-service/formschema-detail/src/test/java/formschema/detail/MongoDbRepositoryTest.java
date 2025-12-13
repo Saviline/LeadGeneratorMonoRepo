@@ -1,6 +1,6 @@
 package formschema.detail;
-import formschema.core.models.FormSchema;
-import formschema.detail.mongodb.MongoDBFormSchemaRepository;
+import formschema.core.domain.FormSchema;
+import formschema.detail.persistence.mongodb.MongoDBFormSchemaRepository;
 
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MongoDBContainer;
