@@ -1,15 +1,14 @@
-package formschema.core.fake;
-
+package formschema.detail.persistence.inmemory;
 import java.util.Map;
 
 import formschema.core.domain.FormSchema;
 import formschema.core.ports.outbound.IFormSchemaRepository;
 
-public class FakeFormSchemaRepository implements IFormSchemaRepository<FormSchema, String> {
+public class InMemoryFormSchemaRepository implements IFormSchemaRepository<FormSchema, String> {
 
-  Map<String, FormSchema> formSchemaStore;
+    Map<String, FormSchema> formSchemaStore;
 
-   public FakeFormSchemaRepository() {
+   public InMemoryFormSchemaRepository() {
         this.formSchemaStore =  new java.util.HashMap<>();
     }
 
@@ -29,5 +28,4 @@ public class FakeFormSchemaRepository implements IFormSchemaRepository<FormSchem
     public Boolean deleteFormSchema(String id) {
         return formSchemaStore.remove(id) != null;
     }
-    
 }
