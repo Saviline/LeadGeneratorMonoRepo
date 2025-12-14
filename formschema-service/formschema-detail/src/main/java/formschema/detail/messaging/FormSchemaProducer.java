@@ -39,6 +39,6 @@ public class FormSchemaProducer implements IPublisher {
         .build();
 
         rabbitTemplate.convertAndSend(exchange,  validationRoutingKey, event);
-        log.info("Published schema.validation.updated: schemaId={}", schema.getId());
+        log.debug("Published schema.validation.updated: event.id={}, schema.id={}", event.getEventId(), schema.getId());
     }
 }

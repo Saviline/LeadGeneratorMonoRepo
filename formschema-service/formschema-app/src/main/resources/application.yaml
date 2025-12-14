@@ -19,3 +19,20 @@ rabbitmq:
   business:
     queue: q.lead.schema.business
     routing-key: schema.business.updated
+
+logging:
+  level:
+    root: INFO
+    formschema: DEBUG
+    org.springframework: WARN
+    org.springframework.amqp: INFO
+    org.mongodb: WARN
+  file:
+    name:  logs/${spring.application.name}.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
+  patteren:
+    console: "%d{HH:mm:ss} %highlight(%-5level) %cyan(%logger{20}) - %msg%n"
+  
