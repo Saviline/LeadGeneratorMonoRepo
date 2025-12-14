@@ -1,0 +1,155 @@
+# FULL SYSTEM: Local development - run entire LeadGen system
+# Use: docker-compose up
+
+services:
+  # ============================================
+  # SHARED INFRASTRUCTURE
+  # ============================================
+
+  rabbitmq:
+    image: rabbitmq:management-alpine
+    container_name: shared-rabbit
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=user
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - leadgen-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./infrastructure/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - leadgen-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - leadgen-network
+
+  # ============================================
+  # FORMSCHEMA SERVICE
+  # ============================================
+
+  formschema-app:
+    build:
+      context: ./formschema-service
+      dockerfile: Dockerfile
+    container_name: formschema-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://formschema-mongo:27017/formschema_db
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=user
+      - SPRING_RABBITMQ_PASSWORD=user
+    depends_on:
+      - formschema-mongo
+      - rabbitmq
+    networks:
+      - leadgen-network
+
+  formschema-mongo:
+    image: mongo:7
+    container_name: formschema-mongo
+    volumes:
+      - formschema-mongo-data:/data/db
+    networks:
+      - leadgen-network
+
+  # ============================================
+  # SUBMISSION SERVICE (placeholder)
+  # Uncomment when ready
+  # ============================================
+
+  # submission-app:
+  #   build:
+  #     context: ./submission-service
+  #     dockerfile: Dockerfile
+  #   container_name: submission-app
+  #   ports:
+  #     - "8081:8080"
+  #   environment:
+  #     - SPRING_DATA_MONGODB_URI=mongodb://submission-mongo:27017/submission_db
+  #     - SPRING_RABBITMQ_HOST=rabbitmq
+  #     - SPRING_REDIS_HOST=submission-redis
+  #   depends_on:
+  #     - submission-mongo
+  #     - submission-redis
+  #     - rabbitmq
+  #   networks:
+  #     - leadgen-network
+
+  # submission-mongo:
+  #   image: mongo:7
+  #   container_name: submission-mongo
+  #   volumes:
+  #     - submission-mongo-data:/data/db
+  #   networks:
+  #     - leadgen-network
+
+  # submission-redis:
+  #   image: redis:alpine
+  #   container_name: submission-redis
+  #   networks:
+  #     - leadgen-network
+
+  # ============================================
+  # LEAD SERVICE (placeholder)
+  # Uncomment when ready
+  # ============================================
+
+  # lead-app:
+  #   build:
+  #     context: ./lead-service
+  #     dockerfile: Dockerfile
+  #   container_name: lead-app
+  #   ports:
+  #     - "8082:8080"
+  #   environment:
+  #     - SPRING_RABBITMQ_HOST=rabbitmq
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - leadgen-network
+
+# ============================================
+# VOLUMES
+# ============================================
+
+volumes:
+  formschema-mongo-data:
+  # submission-mongo-data:
+  prometheus-data:
+  grafana-data:
+
+# ============================================
+# NETWORKS
+# ============================================
+
+networks:
+  leadgen-network:
+    driver: bridge

@@ -23,8 +23,7 @@ public class FormSchemaService {
         publisher.PublishSchema(schema);
         log.info("FormSchema is published: schema.name={}, schema.id={}", schema.getName(), schemaId);
 
-
-         log.info("Schema created successfully: id={}", schemaId);
+        log.info("Schema created successfully: id={}", schemaId);
         //Return SchemaID
         return schemaId;
     }
