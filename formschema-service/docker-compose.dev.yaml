@@ -1,0 +1,56 @@
+# DEVELOPMENT: formschema-service with ALL dependencies for isolated testing
+# Use: docker-compose -f docker-compose.dev.yaml up
+
+services:
+  formschema-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: formschema-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://formschema-mongo:27017/formschema_db
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=user
+      - SPRING_RABBITMQ_PASSWORD=user
+    depends_on:
+      - formschema-mongo
+      - rabbitmq
+    networks:
+      - formschema-dev-network
+
+  formschema-mongo:
+    image: mongo:7
+    container_name: formschema-mongo
+    volumes:
+      - formschema-mongo-data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - formschema-dev-network
+
+  rabbitmq:
+    image: rabbitmq:management-alpine
+    container_name: formschema-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=user
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - formschema-dev-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  formschema-mongo-data:
+
+networks:
+  formschema-dev-network:
+    driver: bridge

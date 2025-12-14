@@ -1,13 +1,28 @@
+# PRODUCTION: formschema-service with its own dependencies only
+# External services (RabbitMQ) are passed via environment variables
+
 services:
-  shared-rabbit:
-    image: rabbitmq:management-alpine
-    container_name: shared-rabbit
-    environment:
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASS=user
+  formschema-app:
+    image: ${REGISTRY:-local}/formschema-service:${VERSION:-latest}
+    container_name: formschema-app
     ports:
-      - "5672:5672"   # <--- MAPPED TO 5673
-      - "15672:15672" # Management UI (http://localhost:15672)
+      - "8080:8080"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://formschema-mongo:27017/formschema_db
+      - SPRING_RABBITMQ_HOST=${RABBITMQ_HOST}
+      - SPRING_RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASS}
+    depends_on:
+      - formschema-mongo
+    restart: unless-stopped
+
+  formschema-mongo:
+    image: mongo:7
+    container_name: formschema-mongo
+    volumes:
+      - formschema-mongo-data:/data/db
+    restart: unless-stopped
 
 volumes:
-  formschema_data:
+  formschema-mongo-data:

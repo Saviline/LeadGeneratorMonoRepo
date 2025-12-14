@@ -13,14 +13,17 @@ public class FormSchemaService {
     private final IPublisher publisher;
 
     public String createSchema(FormSchema schema) {
+        log.info("Creating schema: name={}", schema.getName());
 
         //Save schema to persistent database
         String schemaId = repository.save(schema);
-        log.info("FormSchema has been created: schema.name={}, schema.id={}", schema.getName(), schemaId);
+        log.info("FormSchema saved to database: schema.name={}, schema.id={}", schema.getName(), schemaId);
 
         //Publish Schema to queues needing it. 
         publisher.PublishSchema(schema);
+        log.info("FormSchema is published: schema.name={}, schema.id={}", schema.getName(), schemaId);
 
+        log.info("Schema created successfully: id={}", schemaId);
         //Return SchemaID
         return schemaId;
     }

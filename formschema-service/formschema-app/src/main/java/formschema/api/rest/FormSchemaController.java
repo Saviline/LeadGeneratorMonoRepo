@@ -5,7 +5,9 @@ import org.springframework.web.bind.annotation.*;
 import formschema.core.application.FormSchemaService;
 import formschema.core.domain.FormSchema;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/schemas")
 @RequiredArgsConstructor
@@ -15,12 +17,9 @@ public class FormSchemaController {
 
     @PostMapping
     public String createSchema(@RequestBody FormSchema schema) {
-        // 1. Spring has already converted JSON -> Java Object
-
-        // 2. You might want to add server-side validation here 
-        // (e.g. check that 'mapTo' points to a valid internal field)
         
-        // 3. Save to MongoDB
+        log.debug("FormSchemaController revieced request: schema.name={}, schema.version={}", schema.getName(), schema.getVersion());
+
         String id = formSchemaService.createSchema(schema);
 
         return id;
