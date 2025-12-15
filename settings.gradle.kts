@@ -7,3 +7,4 @@ plugins {
 rootProject.name = "LeadGen"
 
 includeBuild("formschema-service")
+includeBuild("submission-service")
