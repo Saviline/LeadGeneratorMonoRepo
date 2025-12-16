@@ -3,16 +3,18 @@ package submission.app.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import submission.detail.FormSchemaListener;
 import submission.detail.ReditRepository;
-import submission.detail.ValidatorService;
+import submission.detail.JsonSchemaValidator;
 
 @Configuration
 public class ApplicationConfig {
 
     @Bean
-    public ValidatorService validatorService() {
-        return new ValidatorService();
+    public JsonSchemaValidator validatorService() {
+        return new JsonSchemaValidator(new ObjectMapper());
     }
 
     @Bean

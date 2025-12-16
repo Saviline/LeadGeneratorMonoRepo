@@ -16,69 +16,68 @@ import submission.core.ports.IValidate;
 @RequiredArgsConstructor
 @Slf4j
 public class SubmissionService {
-    final private IRepositorySubmission submissionRepository;
-    final private ICacheFormSchema cache;
-    final private IPublish<Submission> publish;
-    final private IValidate validator;
-    final private IRepositoryCampaign campaignRepository;
+    private final IRepositorySubmission submissionRepository;
+    private final ICacheFormSchema cache;
+    private final IPublish<Submission> publish;
+    private final IValidate validator;
+    private final IRepositoryCampaign campaignRepository;
 
-    public Submission createSubmission(Submission submission){
-        log.info("Submission is being created: submission.id={}, submission.campaignId={}, submussion.SchemaId={}",
-         submission.getSubmissionId(),
-          submission.getCampaignId(),
-           submission.getSchemaId());
+    public Submission createSubmission(Submission submission) {
+        log.info("Processing submission: submission.id={}, campaign.id={}, schema.id={}",
+            submission.getSubmissionId(),
+            submission.getCampaignId(),
+            submission.getSchemaId());
 
-        //Is the campaign active?
-        if(!isCampaignActive(submission.getCampaignId())) {
+        // Is the campaign active?
+        if (!isCampaignActive(submission.getCampaignId())) {
             submission.setStatus(SubmissionStatus.REJECTED);
             submission.setRejectionReason("Campaign not found/active");
             submissionRepository.save(submission);
-            log.warn("Campaign not found/active: campaign.id={}", submission.getCampaignId());
+            log.warn("Submission rejected. Campaign not active: submission.id={}, campaign.id={}",
+                submission.getSubmissionId(), submission.getCampaignId());
             throw new CampaignNotActiveException(submission.getCampaignId());
         }
+        log.debug("Campaign verified: campaign.id={}", submission.getCampaignId());
 
-        log.info("CampaignId is retrieved: campaign.id={}", submission.getCampaignId());
-        
-        //Retrieve schema
+        // Retrieve schema from cache
         String schema = cache.getById(submission.getSchemaId());
         if (schema == null) {
-            log.warn("Schema not found: schema.id={}", submission.getSchemaId());
             submission.setStatus(SubmissionStatus.REJECTED);
-            submission.setRejectionReason("Schema not found/active");
+            submission.setRejectionReason("Schema not found in cache");
             submissionRepository.save(submission);
+            log.warn("Submission rejected. Schema not found: submission.id={}, schema.Id={}",
+                submission.getSubmissionId(), submission.getSchemaId());
             throw new SchemaNotInCacheException(submission.getSchemaId());
-        }       
+        }
+        log.debug("Schema retrieved from cache: schema.id={}", submission.getSchemaId());
 
-        log.info("Validation schema is retrieved: schema.id={}", submission.getSchemaId());
-
-        //Validate it
-       ValidationResult result = validator.validate(submission.getPayload(), schema);
+        // Validate payload against schema
+        ValidationResult result = validator.validate(submission.getPayload(), schema);
         if (!result.isValid()) {
             submission.setStatus(SubmissionStatus.INVALID);
             submission.setRejectionReason(result.getErrorMessage());
             submissionRepository.save(submission);
-            log.info("Submission invalid: id={}, errors={}", 
-                submission.getSubmissionId(), result.getErrors());
+            log.info("Submission invalid: submission.id={}, submission.reason={}",
+                submission.getSubmissionId(), result.getErrorMessage());
             return submission;
         }
-        log.info("Submission is validating: submissionId={}, schema.id={}", submission.getSubmissionId(), submission.getSchemaId());
+        log.debug("Validation passed: submission.id={}", submission.getSubmissionId());
 
-        //Save it
+        // Save valid submission
         submission.setStatus(SubmissionStatus.VALID);
-        submissionRepository.save(submission); 
-    
-        //Publish it
+        submissionRepository.save(submission);
+        log.debug("Submission saved: submission.id={}", submission.getSubmissionId());
+
+        // Publish to lead service
         publish.publish(submission);
-        log.info("Submission is published: submissionId={}", submission.getSubmissionId());
+        log.debug("Submission published: submission.id={}", submission.getSubmissionId());
 
-
-        log.info("Submission succesfully created: submissionId={}, submission.status={}", submission.getSubmissionId(), submission.getStatus());
+        log.info("Submission created successfully: submission.id={}, submission.status={}",
+            submission.getSubmissionId(), submission.getStatus());
         return submission;
     }
-
 
     private boolean isCampaignActive(String campaignId) {
         return campaignRepository.getCampaignById(campaignId) != null;
     }
-
 }

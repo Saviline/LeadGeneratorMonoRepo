@@ -1,48 +1,55 @@
 package submission.app.http;
 
+import java.util.UUID;
 
-import java.util.Map;
-
-import org.slf4j.Logger;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
-import submission.detail.ReditRepository;
-import submission.detail.ValidatorService;
-import submission.detail.dto.ValidationException;
+import lombok.extern.slf4j.Slf4j;
+import submission.app.http.dto.SubmissionRequest;
+import submission.app.http.dto.SubmissionResponse;
+import submission.core.application.SubmissionService;
+import submission.core.domain.Submission;
+import submission.core.domain.SubmissionStatus;
 
-@RequiredArgsConstructor
+@Slf4j
 @RestController
+@RequestMapping("/api/submissions")
+@RequiredArgsConstructor
 public class SubmissionController {
 
-    final private ValidatorService validatorService;
-    final private ReditRepository repository;
-    Logger logger = org.slf4j.LoggerFactory.getLogger(SubmissionController.class);
+    private final SubmissionService submissionService;
 
-    @PostMapping("/submit")
-    public void sendSubmission(@RequestBody Map<String, Object> submissionData) {
-        
-        //Retrieve the form schema ID
-        if(submissionData.isEmpty())
-            throw new IllegalArgumentException("Submission data cannot be empty");
+    @PostMapping
+    public ResponseEntity<SubmissionResponse> submit(@RequestBody SubmissionRequest request) {
+        log.debug("Received submission request: campaignId={}, schemaId={}",
+            request.getCampaignId(), request.getSchemaId());
 
-        String schemaName = submissionData.get("schemaId").toString();
+        // Generate UUID upfront - this is the standard approach
+        Submission submission = Submission.builder()
+            .submissionId(UUID.randomUUID().toString())
+            .campaignId(request.getCampaignId())
+            .schemaId(request.getSchemaId())
+            .payload(request.getPayload())
+            .build();
 
-        logger.info("Received submission for schema: " + schemaName);
+        // Process submission (exceptions handled by GlobalExceptionHandler)
+        Submission result = submissionService.createSubmission(submission);
 
-        //Retrieve the form schema from the repository
-        String schema = repository.getFormSchemaByName(schemaName);
+        // Map status to HTTP response
+        HttpStatus httpStatus = result.getStatus() == SubmissionStatus.VALID
+            ? HttpStatus.CREATED
+            : HttpStatus.UNPROCESSABLE_ENTITY;
 
-        logger.info("Retrieved schema: " + schema);
-
-        try {
-            validatorService.validate(submissionData, schema);
-        } catch (ValidationException e) {
-        	e.printStackTrace();
-        }
-        
-        //Save submission in database and send to lead for futher processing
+        return ResponseEntity.status(httpStatus).body(SubmissionResponse.builder()
+            .submissionId(result.getSubmissionId())
+            .status(result.getStatus().name())
+            .reason(result.getRejectionReason())
+            .build());
     }
 }
