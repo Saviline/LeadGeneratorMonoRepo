@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import submission.detail.FormSchemaListener;
-import submission.detail.ReditRepository;
+import submission.detail.RedisFormSchemaCache;
 import submission.detail.JsonSchemaValidator;
 
 @Configuration
@@ -18,12 +18,12 @@ public class ApplicationConfig {
     }
 
     @Bean
-    public ReditRepository RedisRepository() {
-        return new ReditRepository();
+    public RedisFormSchemaCache RedisRepository() {
+        return new RedisFormSchemaCache();
     }
 
     @Bean
-    public FormSchemaListener formSchemaListener(ReditRepository repository) {
+    public FormSchemaListener formSchemaListener(RedisFormSchemaCache repository) {
         return new FormSchemaListener(repository);
     }
 }
