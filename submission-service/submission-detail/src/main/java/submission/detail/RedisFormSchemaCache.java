@@ -1,25 +1,22 @@
 package submission.detail;
 
+import org.springframework.data.redis.core.RedisTemplate;
+
+import lombok.RequiredArgsConstructor;
 import submission.core.ports.ICacheFormSchema;
 
+@RequiredArgsConstructor
 public class RedisFormSchemaCache implements ICacheFormSchema {
+
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Override
     public void save(String formSchemaId, String validationSchema) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'save'");
+        redisTemplate.opsForValue().set(formSchemaId, validationSchema);
     }
 
     @Override
     public String getById(String id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getById'");
+        return redisTemplate.opsForValue().get(id);
     }
-
-    @Override
-    public Boolean exists(String schemaId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'exists'");
-    }
-
 }

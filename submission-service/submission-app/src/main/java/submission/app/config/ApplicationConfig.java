@@ -2,6 +2,7 @@ package submission.app.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -18,8 +19,8 @@ public class ApplicationConfig {
     }
 
     @Bean
-    public RedisFormSchemaCache RedisRepository() {
-        return new RedisFormSchemaCache();
+    public RedisFormSchemaCache RedisRepository(RedisTemplate<String, String> redisTemplate) {
+        return new RedisFormSchemaCache(redisTemplate);
     }
 
     @Bean

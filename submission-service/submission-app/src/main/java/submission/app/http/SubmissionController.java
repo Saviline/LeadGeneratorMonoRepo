@@ -30,7 +30,6 @@ public class SubmissionController {
         log.debug("Received submission request: campaignId={}, schemaId={}",
             request.getCampaignId(), request.getSchemaId());
 
-        // Generate UUID upfront - this is the standard approach
         Submission submission = Submission.builder()
             .submissionId(UUID.randomUUID().toString())
             .campaignId(request.getCampaignId())
@@ -38,10 +37,8 @@ public class SubmissionController {
             .payload(request.getPayload())
             .build();
 
-        // Process submission (exceptions handled by GlobalExceptionHandler)
         Submission result = submissionService.createSubmission(submission);
 
-        // Map status to HTTP response
         HttpStatus httpStatus = result.getStatus() == SubmissionStatus.VALID
             ? HttpStatus.CREATED
             : HttpStatus.UNPROCESSABLE_ENTITY;
