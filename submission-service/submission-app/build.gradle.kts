@@ -17,6 +17,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
     implementation("org.springframework.boot:spring-boot-starter-amqp")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+     implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
     testImplementation(platform("org.testcontainers:testcontainers-bom:1.19.7"))
     testImplementation("org.testcontainers:junit-jupiter")

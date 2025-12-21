@@ -1,4 +1,6 @@
-# MongoDB Configuration
+server:
+  port: 8082
+
 spring:
   application:
     name: formschema-service
@@ -10,6 +12,12 @@ spring:
     port: 5672
     username: user
     password: user
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/leadgen}
+          jwk-set-uri: ${JWT_JWK_URI:http://localhost:8080/realms/leadgen/protocol/openid-connect/certs}
 
 rabbitmq:
   exchange: leadgen.exchange

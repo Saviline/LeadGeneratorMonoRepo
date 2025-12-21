@@ -1,0 +1,77 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: api-gateway
+
+  # OAuth2 Resource Server (validates JWTs from frontend)
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/leadgen}
+          jwk-set-uri: ${JWT_JWK_URI:http://localhost:8080/realms/leadgen/protocol/openid-connect/certs}
+
+  # Redis for API key storage
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  # Gateway routing configuration
+  cloud:
+    gateway:
+      routes:
+        # =============================================
+        # LANE A: Configuration Traffic (JWT auth)
+        # =============================================
+
+        # FormSchema Service
+        - id: formschema-service
+          uri: ${FORMSCHEMA_SERVICE_URI:http://localhost:8082}
+          predicates:
+            - Path=/api/schemas/**
+
+        # Campaign Service (future)
+        - id: campaign-service
+          uri: ${CAMPAIGN_SERVICE_URI:http://localhost:8083}
+          predicates:
+            - Path=/api/campaigns/**
+
+        # Reward Service (future)
+        - id: reward-service
+          uri: ${REWARD_SERVICE_URI:http://localhost:8084}
+          predicates:
+            - Path=/api/rewards/**
+
+        # =============================================
+        # LANE B: Submission Traffic (API Key auth)
+        # =============================================
+
+        - id: submission-service
+          uri: ${SUBMISSION_SERVICE_URI:http://localhost:8081}
+          predicates:
+            - Path=/api/submit/**
+          filters:
+            - ApiKeyAuthFilter
+            - RewritePath=/api/submit/(?<segment>.*), /api/submissions/${segment}
+            - RewritePath=/api/submit, /api/submissions
+
+logging:
+  level:
+    root: INFO
+    gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true

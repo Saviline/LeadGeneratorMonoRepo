@@ -1,0 +1,24 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: submission-service
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: my_user
+    password: my_secure_password
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/leadgen}
+
+rabbitmq:
+  exchange:
+    name: leadgen.exchange
+  queue:
+    name: q.submission.form.validation
+  routingkey:
+    name: form.schema.updated.validation

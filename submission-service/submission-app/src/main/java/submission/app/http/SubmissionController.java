@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,10 +26,17 @@ public class SubmissionController {
 
     private final SubmissionService submissionService;
 
+    /**
+     * Receives submissions from API Gateway.
+     * Gateway has already validated the API key and injected X-Customer-ID header.
+     */
     @PostMapping
-    public ResponseEntity<SubmissionResponse> submit(@RequestBody SubmissionRequest request) {
-        log.debug("Received submission request: campaignId={}, schemaId={}",
-            request.getCampaignId(), request.getSchemaId());
+    public ResponseEntity<SubmissionResponse> submit(
+            @RequestBody SubmissionRequest request,
+            @RequestHeader("X-Customer-ID") String customerId) {
+
+        log.debug("Received submission request: campaignId={}, schemaId={}, customerId={}",
+            request.getCampaignId(), request.getSchemaId(), customerId);
 
         Submission submission = Submission.builder()
             .submissionId(UUID.randomUUID().toString())
@@ -37,7 +45,7 @@ public class SubmissionController {
             .payload(request.getPayload())
             .build();
 
-        Submission result = submissionService.createSubmission(submission);
+        Submission result = submissionService.createSubmission(submission, customerId);
 
         HttpStatus httpStatus = result.getStatus() == SubmissionStatus.VALID
             ? HttpStatus.CREATED

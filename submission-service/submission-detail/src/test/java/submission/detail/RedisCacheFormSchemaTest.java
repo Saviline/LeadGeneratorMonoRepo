@@ -56,7 +56,6 @@ public class RedisCacheFormSchemaTest {
             String schema = "SCHEMA";
             String schemaId = "Id";
 
-            
             //Act
             cacheFormSchema.save(schemaId, schema);
             String retrived = cacheFormSchema.getById(schemaId);

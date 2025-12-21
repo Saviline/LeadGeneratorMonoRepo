@@ -12,27 +12,33 @@ public class FormSchemaService {
     private final IFormSchemaRepository<FormSchema, String> repository;
     private final IPublisher publisher;
 
-    public String createSchema(FormSchema schema) {
-        log.info("Creating schema: name={}", schema.getName());
+    public String createSchema(FormSchema schema, String customerId) {
+        log.info("Creating schema: name={}, customerId={}", schema.getName(), customerId);
 
-        //Save schema to persistent database
+        // Set customerId from authenticated user (not from request body)
+        schema.setCustomerId(customerId);
+
+        // Save schema to persistent database
         String schemaId = repository.save(schema);
-        log.info("FormSchema saved to database: schema.name={}, schema.id={}", schema.getName(), schemaId);
+        log.info("FormSchema saved to database: schema.name={}, schema.id={}, customer.id={}",
+            schema.getName(), schemaId, customerId);
 
-        //Publish Schema to queues needing it. 
+        // Publish Schema to queues needing it
         publisher.PublishSchema(schema);
         log.info("FormSchema is published: schema.name={}, schema.id={}", schema.getName(), schemaId);
 
         log.info("Schema created successfully: id={}", schemaId);
-        //Return SchemaID
         return schemaId;
     }
 
-    public FormSchema getSchemaById(String id) {
-        return repository.findFormSchemaById(id);
+    public FormSchema getSchemaById(String id, String customerId) {
+        log.debug("Getting schema: id={}, customerId={}", id, customerId);
+        return repository.findByIdAndCustomerId(id, customerId)
+            .orElseThrow(() -> new SchemaNotFoundException(id));
     }
 
-    public Boolean deleteSchemaById(String id) {
-        return repository.deleteFormSchema(id);
+    public Boolean deleteSchemaById(String id, String customerId) {
+        log.info("Deleting schema: id={}, customerId={}", id, customerId);
+        return repository.deleteByIdAndCustomerId(id, customerId);
     }
 }
