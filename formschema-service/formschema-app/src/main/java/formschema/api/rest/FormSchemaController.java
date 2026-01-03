@@ -1,5 +1,9 @@
 package formschema.api.rest;
 
+import java.util.List;
+
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import formschema.core.application.FormSchemaService;
@@ -16,19 +20,26 @@ public class FormSchemaController {
     private final FormSchemaService formSchemaService;
 
     @PostMapping
-    public String createSchema(@RequestBody FormSchema schema) {
-        
-        log.debug("FormSchemaController revieced request: schema.name={}, schema.version={}", schema.getName(), schema.getVersion());
+    public String createSchema(@RequestBody FormSchema schema, @AuthenticationPrincipal Jwt jwt) {
+        String customerId = jwt.getSubject();
 
-        String id = formSchemaService.createSchema(schema);
+        log.debug("FormSchemaController received request: schema.name={}, schema.version={}, customer.id={}",
+            schema.getName(), schema.getVersion(), customerId);
+
+        String id = formSchemaService.createSchema(schema, customerId);
 
         return id;
     }
 
-    // GET /api/schemas/{id}
     @GetMapping("/{id}")
-    public FormSchema getSchema(@PathVariable String id) {
-        return formSchemaService.getSchemaById(id);
+    public FormSchema getSchema(@PathVariable String id, @AuthenticationPrincipal Jwt jwt) {
+        String customerId = jwt.getSubject();
+        return formSchemaService.getSchemaById(id, customerId);
     }
 
+    @GetMapping("/getAll")
+    public List<FormSchema> getSchema(@AuthenticationPrincipal Jwt jwt) {
+        String customerId = jwt.getSubject();
+        return formSchemaService.getAllSchemaByCustomerId(customerId);
+    }
 }   

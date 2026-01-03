@@ -10,7 +10,9 @@ dependencies {
     implementation("org.slf4j:slf4j-api:2.0.9")
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    
+    testImplementation("org.mockito:mockito-core:5.14.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.14.0")
+
     //Lombok
     compileOnly("org.projectlombok:lombok:1.18.42")
 	annotationProcessor("org.projectlombok:lombok:1.18.42")

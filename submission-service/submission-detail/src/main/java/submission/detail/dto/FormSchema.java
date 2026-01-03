@@ -4,7 +4,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-@JsonIgnoreProperties(ignoreUnknown = true) // Safety: Ignore fields you don't use
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FormSchema {
     private String name;
     private String version;

@@ -1,0 +1,78 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: api-gateway
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/leadgen}
+          jwk-set-uri: ${JWT_JWK_URI:http://localhost:8080/realms/leadgen/protocol/openid-connect/certs}
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+keycloak:
+  auth-server-url: ${KEYCLOAK_URL:http://localhost:8080}
+  realm: ${KEYCLOAK_REALM:leadgen}
+  client-id: ${KEYCLOAK_CLIENT_ID:leadgen-gateway}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:vqiXoH5CtsJOBniGvm420zCM8HWnaddb}
+
+spring.cloud.gateway:
+  routes:
+    - id: formschema-service
+      uri: ${FORMSCHEMA_SERVICE_URI:http://localhost:8082}
+      predicates:
+        - Path=/api/schemas/**
+
+    - id: campaign-service
+      uri: ${CAMPAIGN_SERVICE_URI:http://localhost:8083}
+      predicates:
+        - Path=/api/campaigns/**
+
+    - id: reward-service
+      uri: ${REWARD_SERVICE_URI:http://localhost:8084}
+      predicates:
+        - Path=/api/rewards/**
+
+    - id: submission-service
+      uri: ${SUBMISSION_SERVICE_URI:http://localhost:8081}
+      predicates:
+        - Path=/api/submit/**
+      filters:
+        - ApiKeyAuthFilter
+        - RewritePath=/api/submit/(?<segment>.*), /api/submissions/${segment}
+        - RewritePath=/api/submit, /api/submissions
+
+logging:
+  level:
+    root: INFO
+    gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, gateway, prometheus, metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+    prometheus:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

@@ -1,3 +1,4 @@
+
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
@@ -12,13 +13,20 @@ scrape_configs:
     static_configs:
       - targets: ['formschema-app:8080']
 
-  # Uncomment when services are ready
-  # - job_name: 'submission-service'
-  #   metrics_path: '/actuator/prometheus'
-  #   static_configs:
-  #     - targets: ['submission-app:8080']
+  - job_name: 'submission-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['submission-app:8080']
 
-  # - job_name: 'lead-service'
-  #   metrics_path: '/actuator/prometheus'
-  #   static_configs:
-  #     - targets: ['lead-app:8080']
+  - job_name: 'api-gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['api-gateway:8090']
+
+  - job_name: 'tempo'
+    static_configs:
+      - targets: ['tempo:3200']
+
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']

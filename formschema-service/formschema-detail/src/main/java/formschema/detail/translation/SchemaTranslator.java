@@ -22,8 +22,7 @@ public class SchemaTranslator implements ITranslator<Map<String, Object>> {
 
         for (FormField field : schema.getFields()) {
             Map<String, Object> rule = new HashMap<>();
-            
-            // 1. Generic Type Mapping
+
             String type = field.getType().toLowerCase();
             switch (type) {
                 case "number": rule.put("type", "number"); break;
@@ -31,7 +30,6 @@ public class SchemaTranslator implements ITranslator<Map<String, Object>> {
                 default:       rule.put("type", "string");
             }
 
-            // 2. Validation Rules
             if (field.getValidation() != null) {
                 if (field.getValidation().isRequired()) required.add(field.getKey());
                 if (field.getValidation().getMin() != null) rule.put("minimum", field.getValidation().getMin());
@@ -43,11 +41,10 @@ public class SchemaTranslator implements ITranslator<Map<String, Object>> {
         jsonSchema.put("properties", properties);
         jsonSchema.put("required", required);
 
-        // WRAP IT in an event payload
         Map<String, Object> payload = new HashMap<>();
         payload.put("schemaId", schema.getId());
-        payload.put("validationSchema", jsonSchema); // <--- The Standard format
-        
+        payload.put("validationSchema", jsonSchema);
+
         return payload;
     }
 

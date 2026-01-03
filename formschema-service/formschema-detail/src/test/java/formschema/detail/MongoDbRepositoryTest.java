@@ -13,6 +13,8 @@ import com.mongodb.client.MongoClients;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 
 @Testcontainers
@@ -29,42 +31,32 @@ class MongoDbRepositoryTest {
 
     
 
-    @BeforeEach // Use JUnit 5's annotation, not void setUp() without annotation
+    @BeforeEach
     void setUp() {
-        // 1. Get the random port/connection string from the running container
         String connectionString = mongoDBContainer.getReplicaSetUrl();
-
-        // 2. Create a Native Mongo Client manually (No Spring DI)
         mongoClient = MongoClients.create(connectionString);
-
-        // 3. Create the MongoTemplate manually
-        // We pass the client and the database name we want to use ("test_db")
         mongoTemplate = new MongoTemplate(mongoClient, "test_db");
-
-        // 4. Inject it into your repository
         repository = new MongoDBFormSchemaRepository(mongoTemplate);
     }
     
     @org.junit.jupiter.api.AfterEach
     void tearDown() {
         if (this.mongoClient != null) {
-            this.mongoClient.close(); // <--- This kills the background threads
+            this.mongoClient.close();
         }
     }
 
     @Test
-    void should_save_schema() 
+    void should_save_schema()
     {
-        //Arrange
+        String customerId = "money";
         FormSchema schema = new FormSchema();
         schema.setName("Test Schema");
 
-        //Act
         String id = repository.save(schema);
 
-        //Assert
-        FormSchema found = repository.findFormSchemaById(id);
+        Optional<FormSchema> found = repository.findByIdAndCustomerId(id, customerId);
 
-        assertEquals(found.getId(), id);
+        assertEquals(found.get().getId(), id);
     }
 }

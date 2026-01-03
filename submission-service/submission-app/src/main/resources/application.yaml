@@ -1,0 +1,57 @@
+server:
+  port: ${PORT:8081}
+
+spring:
+  application:
+    name: submission-service
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: user
+    password: user
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/leadgen}
+
+rabbitmq:
+  exchange: leadgen.exchange
+  routing-key: submission.submission.created
+  form-schema-queue:
+    queue: submission.formschema.queue
+    routing-key: formschema.schema.updated
+  campaign-queue:
+    queue: submission.campaign.queue
+    routing-key: campaign.campaign.updated
+
+logging:
+  level:
+    root: INFO
+    submission: DEBUG
+    org.springframework: WARN
+    org.springframework.amqp: INFO
+  file:
+    name: logs/${spring.application.name}.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
+  pattern:
+    console: "%d{HH:mm:ss} %highlight(%-5level) %cyan(%logger{20}) - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus, metrics
+      base-path: /actuator
+  endpoint:
+    metrics:
+      tags:
+        application: ${spring.application.name}
+    health:
+      show-details: always
+  health:
+    rabbit:
+      enabled: true
