@@ -1,5 +1,7 @@
 package submission.app.config;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -8,24 +10,38 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import submission.core.application.SubmissionService;
 import submission.core.domain.Submission;
+import submission.core.domain.Campaign;
 import submission.core.ports.ICacheFormSchema;
 import submission.core.ports.IPublish;
 import submission.core.ports.IRepositoryCampaign;
 import submission.core.ports.IRepositorySubmission;
 import submission.core.ports.IValidate;
-import submission.detail.FormSchemaListener;
+import submission.detail.messaging.FormSchemaListener;
+import submission.detail.messaging.CampaignListener;
+import submission.detail.messaging.SubmissionProducer;
 import submission.detail.RedisFormSchemaCache;
 import submission.detail.JsonSchemaValidator;
 
 import java.util.Optional;
-import submission.core.domain.Campaign;
 
 @Configuration
+@EnableConfigurationProperties(RabbitMQProperties.class)
 public class ApplicationConfig {
 
+    private final RabbitMQProperties rabbitMQProperties;
+
+    public ApplicationConfig(RabbitMQProperties rabbitMQProperties) {
+        this.rabbitMQProperties = rabbitMQProperties;
+    }
+
     @Bean
-    public IValidate validatorService() {
-        return new JsonSchemaValidator(new ObjectMapper());
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
+    }
+
+    @Bean
+    public IValidate validatorService(ObjectMapper objectMapper) {
+        return new JsonSchemaValidator(objectMapper);
     }
 
     @Bean
@@ -34,17 +50,15 @@ public class ApplicationConfig {
     }
 
     @Bean
-    public FormSchemaListener formSchemaListener(RedisFormSchemaCache cache) {
-        return new FormSchemaListener(cache);
+    public FormSchemaListener formSchemaListener(ICacheFormSchema cache, ObjectMapper objectMapper) {
+        return new FormSchemaListener(cache, objectMapper);
     }
 
     @Bean
     public IRepositorySubmission submissionRepository() {
-        // TODO: Replace with actual MongoDB implementation
         return new IRepositorySubmission() {
             @Override
             public void save(Submission submission) {
-                // Stub implementation
             }
 
             @Override
@@ -56,11 +70,9 @@ public class ApplicationConfig {
 
     @Bean
     public IRepositoryCampaign campaignRepository() {
-        // TODO: Replace with actual implementation
         return new IRepositoryCampaign() {
             @Override
             public void save(Campaign campaign) {
-                // Stub implementation
             }
 
             @Override
@@ -70,20 +82,21 @@ public class ApplicationConfig {
 
             @Override
             public void delete(String campaignId) {
-                // Stub implementation
             }
         };
     }
 
     @Bean
-    public IPublish<Submission> submissionPublisher() {
-        // TODO: Replace with actual Kafka/RabbitMQ implementation
-        return new IPublish<Submission>() {
-            @Override
-            public void publish(Submission entity) {
-                // Stub implementation
-            }
-        };
+    public CampaignListener campaignListener(IRepositoryCampaign campaignRepository) {
+        return new CampaignListener(campaignRepository);
+    }
+
+    @Bean
+    public IPublish<Submission> submissionProducer(RabbitTemplate rabbitTemplate) {
+        return new SubmissionProducer(
+                rabbitMQProperties.getExchange(),
+                rabbitMQProperties.getRoutingKey(),
+                rabbitTemplate);
     }
 
     @Bean

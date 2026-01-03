@@ -1,10 +1,9 @@
 package formschema.detail.messaging;
-import java.util.Map;
+
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import formschema.core.domain.FormSchema;
 import formschema.core.ports.outbound.IPublisher;
-import formschema.core.ports.outbound.ITranslator;
-import formschema.detail.messaging.events.SchemaValidationUpdatedEvent;
+import formschema.detail.messaging.events.SchemaUpdatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,32 +12,15 @@ import lombok.extern.slf4j.Slf4j;
 public class FormSchemaProducer implements IPublisher {
 
     private final String exchange;
-    private final String validationRoutingKey;
-    private final String businessRoutingKey;
-
-    private final ITranslator<Map<String, Object>> schemaTranslator;
+    private final String routingKey;
     private final RabbitTemplate rabbitTemplate;
 
     @Override
     public void PublishSchema(FormSchema schema) {
-        String correlationId = java.util.UUID.randomUUID().toString();
+        SchemaUpdatedEvent event = SchemaUpdatedEvent.from(schema);
 
-        //Publish to submission
-        publishValidationEvent(schema, correlationId);
-    }
-
-    private void publishValidationEvent(FormSchema schema, String correlationId){
-        SchemaValidationUpdatedEvent event = SchemaValidationUpdatedEvent.builder()
-        .eventId(java.util.UUID.randomUUID().toString())
-        .eventType("schema.validation.updated")
-        .timestamp(java.time.Instant.now())
-        .correlationId(correlationId)
-        .schemaId(schema.getId())
-        .schemaVersion(schema.getVersion())
-        .validationSchema(schemaTranslator.convertToValidationSchema(schema).toString())
-        .build();
-
-        rabbitTemplate.convertAndSend(exchange,  validationRoutingKey, event);
-        log.debug("Published schema.validation.updated: event.id={}, schema.id={}", event.getEventId(), schema.getId());
+        rabbitTemplate.convertAndSend(exchange, routingKey, event);
+        log.info("Published formschema.schema.updated: eventId={}, schemaId={}, customerId={}",
+                event.getEventId(), schema.getId(), schema.getCustomerId());
     }
 }

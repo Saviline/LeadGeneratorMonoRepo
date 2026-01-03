@@ -21,12 +21,7 @@ spring:
 
 rabbitmq:
   exchange: leadgen.exchange
-  validation:
-    queue: q.submission.schema.validation
-    routing-key: schema.validation.updated
-  business:
-    queue: q.lead.schema.business
-    routing-key: schema.business.updated
+  routing-key: formschema.schema.updated
 
 logging:
   level:

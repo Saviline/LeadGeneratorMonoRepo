@@ -13,10 +13,6 @@ import org.springframework.security.web.server.util.matcher.PathPatternParserSer
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
-    /**
-     * Lane B: API Key authentication for submission traffic.
-     * Matches /api/submit/** - API key validation happens in ApiKeyAuthFilter.
-     */
     @Bean
     @Order(1)
     public SecurityWebFilterChain apiKeySecurityChain(ServerHttpSecurity http) {
@@ -27,10 +23,6 @@ public class SecurityConfig {
             .build();
     }
 
-    /**
-     * Lane A: JWT Resource Server for configuration traffic.
-     * Frontend (React/Vue) handles Keycloak login and sends Bearer token.
-     */
     @Bean
     @Order(2)
     public SecurityWebFilterChain jwtSecurityChain(ServerHttpSecurity http) {
@@ -39,6 +31,7 @@ public class SecurityConfig {
             .authorizeExchange(exchanges -> exchanges
                 .pathMatchers(HttpMethod.OPTIONS).permitAll()
                 .pathMatchers("/actuator/**").permitAll()
+                .pathMatchers("/api/auth/**").permitAll()
                 .pathMatchers("/api/keys/**").authenticated()
                 .pathMatchers("/api/schemas/**").authenticated()
                 .pathMatchers("/api/campaigns/**").authenticated()

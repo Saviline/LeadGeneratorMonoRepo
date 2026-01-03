@@ -1,5 +1,6 @@
 package formschema.detail.persistence.mongodb;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -44,6 +45,14 @@ public class MongoDBFormSchemaRepository implements IFormSchemaRepository<FormSc
         log.debug("Schema delete attempted: schema.id={}, customer.id={}, deleted={}",
             id, customerId, deleted);
         return deleted;
+    }
+
+    @Override
+    public Optional<List<FormSchema>> getAllByCustomerId(String customerId) {
+        Query query = Query.query(Criteria.where("customerId").is(customerId));
+        var result = mongoTemplate.find(query, FormSchema.class);
+        log.debug("All Schemas retrieved: customer.id={}", customerId);
+        return Optional.of(result);
     }
 
 }

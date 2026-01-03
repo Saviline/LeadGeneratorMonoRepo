@@ -8,15 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-/**
- * Gateway filter that validates API keys for Lane B (submission traffic).
- *
- * Flow:
- * 1. Extract X-Api-Key header from request
- * 2. Look up key in Redis to get customerId
- * 3. If valid, inject X-Customer-ID header and forward
- * 4. If invalid, return 401 Unauthorized
- */
 @Slf4j
 @Component
 public class ApiKeyAuthFilter extends AbstractGatewayFilterFactory<ApiKeyAuthFilter.Config> {
@@ -43,7 +34,6 @@ public class ApiKeyAuthFilter extends AbstractGatewayFilterFactory<ApiKeyAuthFil
                 .flatMap(customerId -> {
                     log.debug("API key validated. customerId={}", customerId);
 
-                    // Inject X-Customer-ID header for downstream service
                     var mutatedRequest = exchange.getRequest().mutate()
                         .header("X-Customer-ID", customerId)
                         .build();
@@ -63,6 +53,5 @@ public class ApiKeyAuthFilter extends AbstractGatewayFilterFactory<ApiKeyAuthFil
     }
 
     public static class Config {
-        // Configuration properties if needed
     }
 }

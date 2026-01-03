@@ -5,7 +5,6 @@ spring:
   application:
     name: api-gateway
 
-  # OAuth2 Resource Server (validates JWTs from frontend)
   security:
     oauth2:
       resourceserver:
@@ -13,50 +12,42 @@ spring:
           issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/leadgen}
           jwk-set-uri: ${JWT_JWK_URI:http://localhost:8080/realms/leadgen/protocol/openid-connect/certs}
 
-  # Redis for API key storage
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
-  # Gateway routing configuration
-  cloud:
-    gateway:
-      routes:
-        # =============================================
-        # LANE A: Configuration Traffic (JWT auth)
-        # =============================================
+keycloak:
+  auth-server-url: ${KEYCLOAK_URL:http://localhost:8080}
+  realm: ${KEYCLOAK_REALM:leadgen}
+  client-id: ${KEYCLOAK_CLIENT_ID:leadgen-gateway}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:vqiXoH5CtsJOBniGvm420zCM8HWnaddb}
 
-        # FormSchema Service
-        - id: formschema-service
-          uri: ${FORMSCHEMA_SERVICE_URI:http://localhost:8082}
-          predicates:
-            - Path=/api/schemas/**
+spring.cloud.gateway:
+  routes:
+    - id: formschema-service
+      uri: ${FORMSCHEMA_SERVICE_URI:http://localhost:8082}
+      predicates:
+        - Path=/api/schemas/**
 
-        # Campaign Service (future)
-        - id: campaign-service
-          uri: ${CAMPAIGN_SERVICE_URI:http://localhost:8083}
-          predicates:
-            - Path=/api/campaigns/**
+    - id: campaign-service
+      uri: ${CAMPAIGN_SERVICE_URI:http://localhost:8083}
+      predicates:
+        - Path=/api/campaigns/**
 
-        # Reward Service (future)
-        - id: reward-service
-          uri: ${REWARD_SERVICE_URI:http://localhost:8084}
-          predicates:
-            - Path=/api/rewards/**
+    - id: reward-service
+      uri: ${REWARD_SERVICE_URI:http://localhost:8084}
+      predicates:
+        - Path=/api/rewards/**
 
-        # =============================================
-        # LANE B: Submission Traffic (API Key auth)
-        # =============================================
-
-        - id: submission-service
-          uri: ${SUBMISSION_SERVICE_URI:http://localhost:8081}
-          predicates:
-            - Path=/api/submit/**
-          filters:
-            - ApiKeyAuthFilter
-            - RewritePath=/api/submit/(?<segment>.*), /api/submissions/${segment}
-            - RewritePath=/api/submit, /api/submissions
+    - id: submission-service
+      uri: ${SUBMISSION_SERVICE_URI:http://localhost:8081}
+      predicates:
+        - Path=/api/submit/**
+      filters:
+        - ApiKeyAuthFilter
+        - RewritePath=/api/submit/(?<segment>.*), /api/submissions/${segment}
+        - RewritePath=/api/submit, /api/submissions
 
 logging:
   level:
@@ -69,9 +60,19 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, gateway
+        include: health, info, gateway, prometheus, metrics
+      base-path: /actuator
   endpoint:
     health:
       show-details: always
     gateway:
       enabled: true
+    prometheus:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

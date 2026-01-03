@@ -32,7 +32,6 @@ public class SubmissionService {
             submission.getSchemaId(),
             customerId);
 
-        // Is the campaign active and owned by this customer?
         Optional<Campaign> campaignOpt = campaignRepository.findByIdAndCustomerId(
             submission.getCampaignId(), customerId);
 
@@ -48,7 +47,6 @@ public class SubmissionService {
         Campaign campaign = campaignOpt.get();
         log.debug("Campaign verified: campaign.id={}, customer.id={}", campaign.getCampaignId(), customerId);
 
-        // Retrieve schema from cache
         String schema = cache.getById(submission.getSchemaId());
         if (schema == null) {
             submission.setStatus(SubmissionStatus.REJECTED);
@@ -60,7 +58,6 @@ public class SubmissionService {
         }
         log.debug("Schema retrieved from cache: schema.id={}", submission.getSchemaId());
 
-        // Validate payload against schema
         ValidationResult result = validator.validate(submission.getPayload(), schema);
         if (!result.isValid()) {
             submission.setStatus(SubmissionStatus.INVALID);
@@ -72,12 +69,10 @@ public class SubmissionService {
         }
         log.debug("Validation passed: submission.id={}", submission.getSubmissionId());
 
-        // Save valid submission
         submission.setStatus(SubmissionStatus.VALID);
         submissionRepository.save(submission);
         log.debug("Submission saved: submission.id={}", submission.getSubmissionId());
 
-        // Publish to lead service
         publish.publish(submission);
         log.debug("Submission published: submission.id={}", submission.getSubmissionId());
 

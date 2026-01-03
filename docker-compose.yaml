@@ -1,14 +1,8 @@
-# FULL SYSTEM: Local development - run entire LeadGen system
-# Use: docker-compose up
-
 services:
-  # ============================================
-  # SHARED INFRASTRUCTURE
-  # ============================================
-
   rabbitmq:
     image: rabbitmq:management-alpine
-    container_name: shared-rabbit
+    container_name: rabbitmq
+    hostname: rabbitmq
     environment:
       - RABBITMQ_DEFAULT_USER=user
       - RABBITMQ_DEFAULT_PASS=user
@@ -40,18 +34,18 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning
     ports:
       - "3000:3000"
     depends_on:
       - prometheus
+      - loki
+      - tempo
     networks:
       - leadgen-network
-
-  # ============================================
-  # AUTHENTICATION (Keycloak)
-  # ============================================
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
@@ -67,9 +61,33 @@ services:
     networks:
       - leadgen-network
 
-  # ============================================
-  # FORMSCHEMA SERVICE
-  # ============================================
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: loki
+    user: "0"
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./infrastructure/loki-config.yaml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - leadgen-network
+
+  tempo:
+    image: grafana/tempo:2.4.0
+    container_name: tempo
+    ports:
+      - "3200:3200"   # Tempo UI
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    volumes:
+      - ./infrastructure/tempo-config.yaml:/etc/tempo/config.yaml
+      - tempo-data:/tmp/tempo
+    command: ["-config.file=/etc/tempo/config.yaml"]
+    networks:
+      - leadgen-network
+  ################################################################################################################################
 
   formschema-app:
     build:
@@ -84,26 +102,38 @@ services:
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=user
       - SPRING_RABBITMQ_PASSWORD=user
-      - JWT_ISSUER_URI=http://localhost:8080/realms/leadgen
+      - JWT_ISSUER_URI=http://keycloak:8080/realms/leadgen
       - JWT_JWK_URI=http://keycloak:8080/realms/leadgen/protocol/openid-connect/certs
+      - OTEL_SERVICE_NAME=formschema-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
     depends_on:
       - formschema-mongo
       - rabbitmq
       - keycloak
+      - tempo
+      - loki
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://host.docker.internal:3100/loki/api/v1/push"
+        loki-retries: "5"
+        loki-batch-size: "400"
+        labels: "service=formschema-service"
     networks:
       - leadgen-network
 
   formschema-mongo:
     image: mongo:7
     container_name: formschema-mongo
+    ports:
+      - "27017:27017"
     volumes:
       - formschema-mongo-data:/data/db
     networks:
       - leadgen-network
-
-  # ============================================
-  # API GATEWAY
-  # ============================================
 
   api-gateway:
     build:
@@ -113,94 +143,109 @@ services:
     ports:
       - "8090:8090"
     environment:
-      - JWT_ISSUER_URI=http://localhost:8080/realms/leadgen
+      - JWT_ISSUER_URI=http://keycloak:8080/realms/leadgen
       - JWT_JWK_URI=http://keycloak:8080/realms/leadgen/protocol/openid-connect/certs
+      - KEYCLOAK_URL=http://keycloak:8080
       - REDIS_HOST=gateway-redis
       - REDIS_PORT=6379
       - FORMSCHEMA_SERVICE_URI=http://formschema-app:8080
       - SUBMISSION_SERVICE_URI=http://submission-app:8080
+      - OTEL_SERVICE_NAME=api-gateway
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
     depends_on:
       - gateway-redis
       - keycloak
+      - tempo
+      - formschema-app
+      - submission-app
+      - loki
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://host.docker.internal:3100/loki/api/v1/push"
+        loki-retries: "5"
+        loki-batch-size: "400"
+        labels: "service=api-gateway"
     networks:
       - leadgen-network
 
   gateway-redis:
     image: redis:alpine
     container_name: gateway-redis
+    ports:
+      - "6379:6379"
     networks:
       - leadgen-network
 
-  # ============================================
-  # SUBMISSION SERVICE (placeholder)
-  # Uncomment when ready
-  # ============================================
+  submission-app:
+    build:
+      context: ./submission-service
+      dockerfile: Dockerfile
+    container_name: submission-app
+    ports:
+      - "8083:8080"
+    environment:
+      - PORT=8080
+      - SPRING_DATA_MONGODB_URI=mongodb://submission-mongo:27017/submission_db
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=user
+      - SPRING_RABBITMQ_PASSWORD=user
+      - SPRING_DATA_REDIS_HOST=submission-redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - JWT_ISSUER_URI=http://keycloak:8080/realms/leadgen
+      - JWT_JWK_URI=http://keycloak:8080/realms/leadgen/protocol/openid-connect/certs
+      - OTEL_SERVICE_NAME=submission-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
+    depends_on:
+      - submission-mongo
+      - submission-redis
+      - rabbitmq
+      - keycloak
+      - tempo
+      - loki
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://host.docker.internal:3100/loki/api/v1/push"
+        loki-retries: "5"
+        loki-batch-size: "400"
+        labels: "service=submission-service"
+    networks:
+      - leadgen-network
 
-  # submission-app:
-  #   build:
-  #     context: ./submission-service
-  #     dockerfile: Dockerfile
-  #   container_name: submission-app
-  #   ports:
-  #     - "8081:8080"
-  #   environment:
-  #     - SPRING_DATA_MONGODB_URI=mongodb://submission-mongo:27017/submission_db
-  #     - SPRING_RABBITMQ_HOST=rabbitmq
-  #     - SPRING_REDIS_HOST=submission-redis
-  #   depends_on:
-  #     - submission-mongo
-  #     - submission-redis
-  #     - rabbitmq
-  #   networks:
-  #     - leadgen-network
+  submission-mongo:
+    image: mongo:7
+    container_name: submission-mongo
+    ports:
+      - "27018:27017"
+    volumes:
+      - submission-mongo-data:/data/db
+    networks:
+      - leadgen-network
 
-  # submission-mongo:
-  #   image: mongo:7
-  #   container_name: submission-mongo
-  #   volumes:
-  #     - submission-mongo-data:/data/db
-  #   networks:
-  #     - leadgen-network
-
-  # submission-redis:
-  #   image: redis:alpine
-  #   container_name: submission-redis
-  #   networks:
-  #     - leadgen-network
-
-  # ============================================
-  # LEAD SERVICE (placeholder)
-  # Uncomment when ready
-  # ============================================
-
-  # lead-app:
-  #   build:
-  #     context: ./lead-service
-  #     dockerfile: Dockerfile
-  #   container_name: lead-app
-  #   ports:
-  #     - "8082:8080"
-  #   environment:
-  #     - SPRING_RABBITMQ_HOST=rabbitmq
-  #   depends_on:
-  #     - rabbitmq
-  #   networks:
-  #     - leadgen-network
-
-# ============================================
-# VOLUMES
-# ============================================
+  submission-redis:
+    image: redis:alpine
+    container_name: submission-redis
+    ports:
+      - "6380:6379"
+    networks:
+      - leadgen-network
 
 volumes:
   formschema-mongo-data:
-  # submission-mongo-data:
+  submission-mongo-data:
   prometheus-data:
   grafana-data:
   keycloak-data:
-
-# ============================================
-# NETWORKS
-# ============================================
+  loki-data:
+  tempo-data:
 
 networks:
   leadgen-network:

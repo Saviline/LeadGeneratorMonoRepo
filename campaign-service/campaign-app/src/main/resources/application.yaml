@@ -1,0 +1,87 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: campaign-service
+
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/campaign
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:mkf59rnd}
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/campaign_db
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: user
+    password: user
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/leadgen}
+          jwk-set-uri: ${JWT_JWK_URI:http://localhost:8080/realms/leadgen/protocol/openid-connect/certs}
+
+mongodb:
+  collections:
+    form-schemas: formSchemas
+  fields:
+    customer-id: customerId
+    schema-id: _id
+
+rabbitmq:
+  exchange: leadgen.exchange
+  routing-key: campaign.campaign.updated
+  form-schema-queue:
+    queue: campaign.formschema.queue
+    routing-key: formschema.schema.updated
+
+logging:
+  level:
+    root: INFO
+    campaign: DEBUG
+    campaign.core.application: DEBUG
+    org.springframework: WARN
+    org.springframework.amqp: INFO
+    io.r2dbc: INFO
+  file:
+    name: logs/${spring.application.name}.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
+  pattern:
+    console: "%d{HH:mm:ss} %highlight(%-5level) %cyan(%logger{20}) - %msg%n"
+
+management:
+
+  tracing:
+    sampling:
+      probability: 1.0 
+  zipkin:
+    tracing:
+      endpoint: "http://localhost:9411/api/v2/spans"
+
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus, metrics
+      base-path: /actuator
+  endpoint:
+    metrics:
+      tags:
+        application: ${spring.application.name}
+    health:
+      show-details: always
+  health:
+    r2dbc:
+      enabled: true
+    mongo:
+      enabled: true
+    rabbit:
+      enabled: true

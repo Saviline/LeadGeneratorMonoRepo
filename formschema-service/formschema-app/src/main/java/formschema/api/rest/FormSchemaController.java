@@ -1,5 +1,7 @@
 package formschema.api.rest;
 
+import java.util.List;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -35,4 +37,9 @@ public class FormSchemaController {
         return formSchemaService.getSchemaById(id, customerId);
     }
 
+    @GetMapping("/getAll")
+    public List<FormSchema> getSchema(@AuthenticationPrincipal Jwt jwt) {
+        String customerId = jwt.getSubject();
+        return formSchemaService.getAllSchemaByCustomerId(customerId);
+    }
 }   

@@ -38,8 +38,9 @@ dependencies {
     // WebFlux (required by Gateway)
     implementation("org.springframework.boot:spring-boot-starter-webflux")
 
-    // Actuator for health checks
+    // Actuator for health checks and metrics
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
 
     // Lombok
     compileOnly("org.projectlombok:lombok")

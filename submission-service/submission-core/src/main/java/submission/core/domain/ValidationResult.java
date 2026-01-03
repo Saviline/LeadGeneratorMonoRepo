@@ -8,15 +8,11 @@ import java.util.ArrayList;
 @Data
 @Builder
 public class ValidationResult {
-    
+
     private boolean valid;
-    private String errorMessage;           // Single message summary
-    private List<String> errors;           // Detailed list of errors
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // FACTORY METHODS - Easy to create results
-    // ═══════════════════════════════════════════════════════════════════════
-    
+    private String errorMessage;
+    private List<String> errors;
+
     public static ValidationResult success() {
         return ValidationResult.builder()
             .valid(true)

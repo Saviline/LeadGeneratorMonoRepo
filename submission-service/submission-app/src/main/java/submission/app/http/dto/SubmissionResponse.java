@@ -8,5 +8,5 @@ import lombok.Data;
 public class SubmissionResponse {
     private String submissionId;
     private String status;
-    private String reason;  // null if valid, error message if rejected/invalid
+    private String reason;
 }

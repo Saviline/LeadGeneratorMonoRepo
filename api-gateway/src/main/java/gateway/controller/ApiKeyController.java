@@ -10,14 +10,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
-/**
- * Controller for API key management.
- * Requires JWT authentication (Lane A).
- *
- * Endpoints:
- *   POST /api/keys      - Generate new API key
- *   DELETE /api/keys    - Revoke API key
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/keys")
@@ -26,10 +18,6 @@ public class ApiKeyController {
 
     private final ApiKeyService apiKeyService;
 
-    /**
-     * Generate a new API key for the authenticated customer.
-     * The key is only shown once - customer must save it.
-     */
     @PostMapping
     public Mono<Map<String, String>> generateKey(@AuthenticationPrincipal Jwt jwt) {
         String customerId = jwt.getSubject();
@@ -42,9 +30,6 @@ public class ApiKeyController {
             ));
     }
 
-    /**
-     * Revoke an API key.
-     */
     @DeleteMapping
     public Mono<Map<String, Object>> revokeKey(
             @RequestBody Map<String, String> request,

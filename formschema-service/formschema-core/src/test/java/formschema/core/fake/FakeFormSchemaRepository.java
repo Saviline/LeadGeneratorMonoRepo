@@ -1,6 +1,7 @@
 package formschema.core.fake;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -40,6 +41,11 @@ public class FakeFormSchemaRepository implements IFormSchemaRepository<FormSchem
             return true;
         }
         return false;
+    }
+
+    @Override
+    public Optional<List<FormSchema>> getAllByCustomerId(String customerId) {
+        throw new UnsupportedOperationException("Unimplemented method 'getAllByCustomerId'");
     }
 
 }

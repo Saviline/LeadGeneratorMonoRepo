@@ -10,9 +10,8 @@ import lombok.Data;
 public class Submission {
 
     private String submissionId;
-
+    private String customerId;
     private String campaignId;
-
     private String schemaId; 
 
     @Builder.Default
@@ -24,7 +23,6 @@ public class Submission {
     private SubmissionStatus status = SubmissionStatus.PENDING;
 
     private String rejectionReason;
-           // Ready for lead processing
 }
 
 

@@ -26,10 +26,6 @@ public class SubmissionController {
 
     private final SubmissionService submissionService;
 
-    /**
-     * Receives submissions from API Gateway.
-     * Gateway has already validated the API key and injected X-Customer-ID header.
-     */
     @PostMapping
     public ResponseEntity<SubmissionResponse> submit(
             @RequestBody SubmissionRequest request,

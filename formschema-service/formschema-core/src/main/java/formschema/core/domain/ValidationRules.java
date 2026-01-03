@@ -5,8 +5,8 @@ import lombok.Data;
 @Data
 public class ValidationRules {
     private boolean required;
-    private String regex;       // "^[A-Z0-9]+$"
-    private Integer min;        // For numbers
+    private String regex;
+    private Integer min;
     private Integer max;
     private String errorMessage;
 }

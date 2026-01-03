@@ -24,11 +24,9 @@ public enum FieldType {
         public void apply(Map<String, Object> fieldDef, ValidationRules rules) {
             fieldDef.put("type", "string");
             fieldDef.put("format", "email");
-            // Standard Regex for Email to be strict
-            fieldDef.put("pattern", "^\\S+@\\S+\\.\\S+$"); 
+            fieldDef.put("pattern", "^\\S+@\\S+\\.\\S+$");
         }
     };
 
-    // The abstract method that forces every Enum to define its logic
     public abstract void apply(Map<String, Object> fieldDef, ValidationRules rules);
 }

@@ -27,14 +27,11 @@ public class JsonSchemaValidator implements IValidate {
         log.debug("Validating payload against schema");
 
         try {
-            // Parse schema
             JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
             JsonSchema jsonSchema = factory.getSchema(schema);
 
-            // Convert payload to JsonNode
             JsonNode payloadNode = objectMapper.valueToTree(payload);
 
-            // Validate
             Set<ValidationMessage> validationErrors = jsonSchema.validate(payloadNode);
 
             if (validationErrors.isEmpty()) {
@@ -42,7 +39,6 @@ public class JsonSchemaValidator implements IValidate {
                 return ValidationResult.success();
             }
 
-            // Collect error messages
             List<String> errors = validationErrors.stream()
                 .map(ValidationMessage::getMessage)
                 .collect(Collectors.toList());
