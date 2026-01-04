@@ -9,6 +9,7 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -18,19 +19,33 @@ import java.time.LocalDateTime;
 public class CampaignEntity {
 
     @Id
-    private String id;
+    @Column("campaign_id")
+    private UUID id;
 
     @Column("customer_id")
-    private String customerId;
+    private UUID customerId;
 
-    private String name;
+    @Column("display_name")
+    private String displayName;
 
     private String description;
 
-    @Column("form_schema_id")
-    private String formSchemaId;
-
     private String status;
+
+    @Column("formschema_id")
+    private UUID formSchemaId;
+
+    @Column("max_submissions")
+    private Integer maxSubmissions;
+
+    @Column("allow_duplicate_submissions")
+    private boolean allowDuplicateSubmissions;
+
+    @Column("require_email_verification")
+    private boolean requireEmailVerification;
+
+    @Column("require_phone_verification")
+    private boolean requirePhoneVerification;
 
     @Column("start_date")
     private LocalDateTime startDate;

@@ -26,21 +26,6 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue formSchemaQueue() {
-        return QueueBuilder
-                .durable(properties.getFormSchemaQueue().getQueue())
-                .build();
-    }
-
-    @Bean
-    public Binding formSchemaBinding(Queue formSchemaQueue, TopicExchange leadgenExchange) {
-        return BindingBuilder
-                .bind(formSchemaQueue)
-                .to(leadgenExchange)
-                .with(properties.getFormSchemaQueue().getRoutingKey());
-    }
-
-    @Bean
     public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
     }

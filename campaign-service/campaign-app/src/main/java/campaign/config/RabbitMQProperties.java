@@ -11,8 +11,6 @@ public class RabbitMQProperties {
     private String exchange;
     private String routingKey;
 
-    private Queue formSchemaQueue = new Queue();
-
     @Data
     public static class Queue {
         private String queue;
