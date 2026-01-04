@@ -10,28 +10,21 @@ dependencyManagement {
 }
 
 dependencies {
-    // Core module
     implementation(project(":campaign-core"))
 
-    // Reactive PostgreSQL (R2DBC)
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
     implementation("org.postgresql:r2dbc-postgresql:1.0.5.RELEASE")
-    implementation("org.postgresql:postgresql") // For schema migrations
+    implementation("org.postgresql:postgresql")
 
-    // Reactive MongoDB (for FormSchema validation lookups)
-    implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
 
-    // RabbitMQ for messaging
     implementation("org.springframework.boot:spring-boot-starter-amqp")
 
-    // Jackson for JSON serialization
     implementation("com.fasterxml.jackson.core:jackson-databind")
 
-    // Test dependencies
     testImplementation(platform("org.testcontainers:testcontainers-bom:1.19.7"))
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
-    testImplementation("org.testcontainers:mongodb")
     testImplementation("org.testcontainers:rabbitmq")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")

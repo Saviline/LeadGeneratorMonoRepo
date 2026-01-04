@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
-    
-    <springProperty scope="context" name="appName" source="spring.application.name"/>
+
+    <!-- Spring Boot defaults -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <springProperty scope="context"
+                    name="appName"
+                    source="spring.application.name"
+                    defaultValue="campaign-app"/>
 
     <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
         <http>
@@ -10,7 +16,9 @@
         </http>
         <format>
             <label>
-                <pattern>app=${appName},host=${HOSTNAME},level=%level,traceID=%X{traceId:-NONE}</pattern>
+                <pattern>
+                    app=${appName},host=${HOSTNAME:-local},level=%level,traceID=%X{traceId:-NONE}
+                </pattern>
             </label>
             <message>
                 <pattern>l=%level c=%logger{20} t=%thread | %msg %ex</pattern>
@@ -19,7 +27,8 @@
     </appender>
 
     <root level="INFO">
-        <appender-ref ref="CONSOLE" />
-        <appender-ref ref="LOKI" />
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="LOKI"/>
     </root>
+
 </configuration>

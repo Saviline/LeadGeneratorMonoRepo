@@ -2,6 +2,7 @@ package formschema.core.application;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import formschema.core.domain.FormSchema;
 import formschema.core.ports.outbound.IFormSchemaRepository;
@@ -18,6 +19,7 @@ public class FormSchemaService {
     public String createSchema(FormSchema schema, String customerId) {
         log.info("Creating schema: name={}, customerId={}", schema.getName(), customerId);
 
+        schema.setId(UUID.randomUUID().toString());
         schema.setCustomerId(customerId);
 
         String schemaId = repository.save(schema);

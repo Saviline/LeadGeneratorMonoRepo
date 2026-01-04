@@ -19,12 +19,17 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class SubmissionService {
+    //We need to implement the submission repository in a mongodb database. Submissions are not able to change after creation.  
     private final IRepositorySubmission submissionRepository;
     private final ICacheFormSchema cache;
     private final IPublish<Submission> publish;
     private final IValidate validator;
     private final IRepositoryCampaign campaignRepository;
+// This service will need to cache campaign, formschema AND save it in database as materilized view. Submission needs to be fast and 
+//Not be dependent on calling http to other serivces to validate or retireve nessecary information, so it will get it all from events and save it to cache
+// and database.
 
+//We will use redis for cahcing and persisent. 
     public Submission createSubmission(Submission submission, String customerId) {
         log.info("Processing submission: submission.id={}, campaign.id={}, schema.id={}, customer.id={}",
             submission.getSubmissionId(),
