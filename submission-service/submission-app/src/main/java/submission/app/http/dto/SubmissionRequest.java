@@ -7,6 +7,5 @@ import lombok.Data;
 @Data
 public class SubmissionRequest {
     private String campaignId;
-    private String schemaId;
     private Map<String, Object> payload;
 }

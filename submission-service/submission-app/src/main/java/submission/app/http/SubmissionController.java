@@ -31,13 +31,11 @@ public class SubmissionController {
             @RequestBody SubmissionRequest request,
             @RequestHeader("X-Customer-ID") String customerId) {
 
-        log.debug("Received submission request: campaignId={}, schemaId={}, customerId={}",
-            request.getCampaignId(), request.getSchemaId(), customerId);
+        log.debug("Received submission request: campaignId={}, customerId={}", request.getCampaignId(), request.getCampaignId(), customerId);
 
         Submission submission = Submission.builder()
             .submissionId(UUID.randomUUID().toString())
             .campaignId(request.getCampaignId())
-            .schemaId(request.getSchemaId())
             .payload(request.getPayload())
             .build();
 
@@ -46,7 +44,8 @@ public class SubmissionController {
         HttpStatus httpStatus = result.getStatus() == SubmissionStatus.VALID
             ? HttpStatus.CREATED
             : HttpStatus.UNPROCESSABLE_ENTITY;
-                //It needs to send back all reasons for rejection, so they can fix it, which is not sensitive or secuirty breach for us. 
+            
+                //Claude: It needs to send back all reasons for rejection, so they can fix it, which is not sensitive or secuirty breach for us. 
         return ResponseEntity.status(httpStatus).body(SubmissionResponse.builder()
             .submissionId(result.getSubmissionId())
             .status(result.getStatus().name())

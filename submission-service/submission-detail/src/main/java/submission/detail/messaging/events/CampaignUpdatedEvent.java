@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @SuperBuilder
@@ -16,12 +17,17 @@ import java.time.LocalDateTime;
 public class CampaignUpdatedEvent extends EventBase {
 
     private String campaignId;
-    private String name;
+    private String displayName;
+    private String description;
     private String formSchemaId;
-    private String rewardId;
     private String status;
+    private Integer maxSubmissions;
+    private boolean allowDuplicateSubmissions;
+    private boolean requireEmailVerification;
+    private boolean requirePhoneVerification;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private List<String> integrationIds;
 }

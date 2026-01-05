@@ -21,7 +21,6 @@ public class SubmissionCreatedEvent extends EventBase {
 
     private String submissionId;
     private String campaignId;
-    private String schemaId;
     private Instant receivedAt;
     private Map<String, Object> formData;
     private SubmissionStatus status;
@@ -36,7 +35,6 @@ public class SubmissionCreatedEvent extends EventBase {
                 .customerId(submission.getCustomerId())
                 .submissionId(submission.getSubmissionId())
                 .campaignId(submission.getCampaignId())
-                .schemaId(submission.getSchemaId())
                 .receivedAt(submission.getReceivedAt())
                 .formData(submission.getPayload())
                 .status(submission.getStatus())

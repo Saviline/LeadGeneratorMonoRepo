@@ -54,7 +54,8 @@ public class ApplicationConfig {
     @Bean
     public CampaignService campaignService(ICampaignRepository campaignRepository,
                                            IFormSchemaRepository formSchemaRepository,
+                                           ICustomerServiceClient customerServiceClient,
                                            IPublisher publisher) {
-        return new CampaignService(campaignRepository, formSchemaRepository, publisher);
+        return new CampaignService(campaignRepository, formSchemaRepository, customerServiceClient, publisher);
     }
 }
