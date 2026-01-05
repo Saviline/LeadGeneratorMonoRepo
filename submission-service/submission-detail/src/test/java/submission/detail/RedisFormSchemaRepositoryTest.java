@@ -2,9 +2,11 @@ package submission.detail;
 
 import com.redis.testcontainers.RedisContainer;
 
-import submission.core.ports.ICacheFormSchema;
+import submission.core.ports.IFormSchemaRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,16 +19,14 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
-public class RedisCacheFormSchemaTest {
+public class RedisFormSchemaRepositoryTest {
 
     @Container
     static RedisContainer redisContainer = new RedisContainer(RedisContainer.DEFAULT_IMAGE_NAME);
 
     private RedisTemplate<String, String> redisTemplate;
     private LettuceConnectionFactory connectionFactory;
-    private ICacheFormSchema cacheFormSchema;
-
-
+    private IFormSchemaRepository formSchemaRepository;
 
     @BeforeEach
     void setUp(){
@@ -42,7 +42,7 @@ public class RedisCacheFormSchemaTest {
         redisTemplate.setValueSerializer(new StringRedisSerializer());
         redisTemplate.afterPropertiesSet();
 
-        cacheFormSchema = new RedisFormSchemaCache(redisTemplate);
+        formSchemaRepository = new RedisFormSchemaRepository(redisTemplate);
     }
 
     @AfterEach
@@ -51,19 +51,22 @@ public class RedisCacheFormSchemaTest {
     }
 
     @Test
-    void SaveFormSchemaById(){
-            //Arrange
-            String schema = "SCHEMA";
-            String schemaId = "Id";
+    void saveAndRetrieveFormSchema(){
+        String customerId = "customer-1";
+        String schemaId = "schema-1";
+        String schema = "{\"fields\":[]}";
 
-            //Act
-            cacheFormSchema.save(schemaId, schema);
-            String retrived = cacheFormSchema.getById(schemaId);
+        formSchemaRepository.save(customerId, schemaId, schema);
+        Optional<String> retrieved = formSchemaRepository.findByCustomerIdAndSchemaId(customerId, schemaId);
 
-            //Assert
-            System.out.println("Expected: " + schema);
-            System.out.println("Retrieved: " + retrived);
-            System.out.println("Match: " + schema.equals(retrived));
-            assertThat(retrived).isEqualTo(schema);
+        assertThat(retrieved).isPresent();
+        assertThat(retrieved.get()).isEqualTo(schema);
+    }
+
+    @Test
+    void findByCustomerIdAndSchemaId_NotFound_ReturnsEmpty(){
+        Optional<String> retrieved = formSchemaRepository.findByCustomerIdAndSchemaId("unknown", "unknown");
+
+        assertThat(retrieved).isEmpty();
     }
 }

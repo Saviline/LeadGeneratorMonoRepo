@@ -42,13 +42,14 @@ public class ApiKeyAuthFilter extends AbstractGatewayFilterFactory<ApiKeyAuthFil
                         .request(mutatedRequest)
                         .build();
 
-                    return chain.filter(mutatedExchange);
+                    return chain.filter(mutatedExchange).then(Mono.just(customerId));
                 })
                 .switchIfEmpty(Mono.defer(() -> {
                     log.warn("Invalid API key");
                     exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                    return exchange.getResponse().setComplete();
-                }));
+                    return exchange.getResponse().setComplete().then(Mono.empty());
+                }))
+                .then();
         };
     }
 

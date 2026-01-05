@@ -11,8 +11,7 @@ public class Submission {
 
     private String submissionId;
     private String customerId;
-    private String campaignId;
-    private String schemaId; 
+    private String campaignId; 
 
     @Builder.Default
     private Instant receivedAt = Instant.now();

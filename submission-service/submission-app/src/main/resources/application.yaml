@@ -14,6 +14,12 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/leadgen}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6380}
+    mongodb:
+      uri: ${MONGODB_HOST:mongodb://localhost:27017/submission_db}
 
 rabbitmq:
   exchange: leadgen.exchange

@@ -17,7 +17,7 @@ public class SecurityConfig {
     @Order(1)
     public SecurityWebFilterChain apiKeySecurityChain(ServerHttpSecurity http) {
         return http
-            .securityMatcher(new PathPatternParserServerWebExchangeMatcher("/api/submit/**"))
+            .securityMatcher(new PathPatternParserServerWebExchangeMatcher("/api/submissions/**"))
             .csrf(csrf -> csrf.disable())
             .authorizeExchange(exchanges -> exchanges.anyExchange().permitAll())
             .build();
