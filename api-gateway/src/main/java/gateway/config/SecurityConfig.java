@@ -35,7 +35,6 @@ public class SecurityConfig {
                 .pathMatchers("/api/keys/**").authenticated()
                 .pathMatchers("/api/schemas/**").authenticated()
                 .pathMatchers("/api/campaigns/**").authenticated()
-                .pathMatchers("/api/rewards/**").authenticated()
                 .anyExchange().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}))

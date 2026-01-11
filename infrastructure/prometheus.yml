@@ -23,6 +23,11 @@ scrape_configs:
     static_configs:
       - targets: ['api-gateway:8090']
 
+  - job_name: 'campaign-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['campaign-app:8080']
+
   - job_name: 'tempo'
     static_configs:
       - targets: ['tempo:3200']

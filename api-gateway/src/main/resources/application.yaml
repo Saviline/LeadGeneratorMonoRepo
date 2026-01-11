@@ -19,9 +19,9 @@ spring:
 
 keycloak:
   auth-server-url: ${KEYCLOAK_URL:http://localhost:8080}
-  realm: ${KEYCLOAK_REALM:leadgen}
-  client-id: ${KEYCLOAK_CLIENT_ID:leadgen-gateway}
-  client-secret: ${KEYCLOAK_CLIENT_SECRET:vqiXoH5CtsJOBniGvm420zCM8HWnaddb}
+  realm: ${KEYCLOAK_REALM}
+  client-id: ${KEYCLOAK_CLIENT_ID}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET}
 
 spring.cloud.gateway:
   routes:

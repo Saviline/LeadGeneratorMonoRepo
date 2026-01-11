@@ -1,0 +1,61 @@
+# PRODUCTION: submission-service standalone deployment
+# External services (RabbitMQ, Keycloak) are passed via environment variables
+
+services:
+  submission-app:
+    image: ${REGISTRY:-local}/submission-service:${VERSION:-latest}
+    container_name: submission-app
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      - PORT=8080
+      # MongoDB (internal)
+      - SPRING_DATA_MONGODB_URI=mongodb://submission-mongo:27017/submission_db
+      - MONGODB_HOST=mongodb://submission-mongo:27017/submission_db
+      # Redis (internal)
+      - SPRING_DATA_REDIS_HOST=submission-redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - REDIS_HOST=submission-redis
+      - REDIS_PORT=6379
+      # RabbitMQ (external)
+      - SPRING_RABBITMQ_HOST=${RABBITMQ_HOST}
+      - SPRING_RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      # JWT/Keycloak (external)
+      - JWT_ISSUER_URI=${JWT_ISSUER_URI}
+      # OpenTelemetry (optional)
+      - OTEL_SERVICE_NAME=submission-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_ENDPOINT:-}
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
+    depends_on:
+      - submission-mongo
+      - submission-redis
+    restart: unless-stopped
+    networks:
+      - submission-network
+
+  submission-mongo:
+    image: mongo:7
+    container_name: submission-mongo
+    volumes:
+      - submission-mongo-data:/data/db
+    restart: unless-stopped
+    networks:
+      - submission-network
+
+  submission-redis:
+    image: redis:alpine
+    container_name: submission-redis
+    restart: unless-stopped
+    networks:
+      - submission-network
+
+volumes:
+  submission-mongo-data:
+
+networks:
+  submission-network:
+    driver: bridge

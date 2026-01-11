@@ -1,5 +1,8 @@
 FROM eclipse-temurin:21-jdk-alpine AS builder
 
+# Install dos2unix to fix Windows line endings
+RUN apk add --no-cache dos2unix
+
 WORKDIR /app
 
 # Copy build files (cached layer)
@@ -12,8 +15,11 @@ COPY submission-app/build.gradle.kts submission-app/
 COPY submission-core/build.gradle.kts submission-core/
 COPY submission-detail/build.gradle.kts submission-detail/
 
+# Fix line endings and make executable
+RUN dos2unix gradlew && chmod +x gradlew
+
 # Download dependencies (cached layer)
-RUN chmod +x gradlew && ./gradlew dependencies --no-daemon
+RUN ./gradlew dependencies --no-daemon
 
 # Copy source code
 COPY submission-app/src submission-app/src

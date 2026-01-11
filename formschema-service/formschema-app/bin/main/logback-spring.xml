@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Spring Boot defaults -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <springProperty scope="context"
+                    name="appName"
+                    source="spring.application.name"
+                    defaultValue="formschema-service"/>
+
+    <!-- Loki4j appender -->
+    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+        <http>
+            <url>${LOKI_URL:-http://loki:3100}/loki/api/v1/push</url>
+        </http>
+        <format>
+            <label>
+                <pattern>
+                    app=${appName},host=${HOSTNAME:-local},level=%level,traceID=%X{traceId:-NONE}
+                </pattern>
+            </label>
+            <message>
+                <pattern>l=%level c=%logger{20} t=%thread | %msg %ex</pattern>
+            </message>
+        </format>
+    </appender>
+
+    <!-- Reduce noise from frameworks -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.springframework.amqp" level="WARN"/>
+    <logger name="org.springframework.data" level="WARN"/>
+    <logger name="org.springframework.security" level="WARN"/>
+    <logger name="org.mongodb" level="WARN"/>
+    <logger name="io.micrometer" level="WARN"/>
+    <logger name="org.apache" level="WARN"/>
+
+    <!-- DEBUG for our application code -->
+    <logger name="formschema" level="DEBUG"/>
+    <logger name="formschema.app" level="DEBUG"/>
+    <logger name="formschema.core" level="DEBUG"/>
+    <logger name="formschema.detail" level="DEBUG"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="LOKI"/>
+    </root>
+
+</configuration>

@@ -8,11 +8,12 @@
     <springProperty scope="context"
                     name="appName"
                     source="spring.application.name"
-                    defaultValue="campaign-app"/>
+                    defaultValue="campaign-service"/>
 
+    <!-- Loki4j appender -->
     <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
         <http>
-            <url>http://localhost:3100/loki/api/v1/push</url>
+            <url>${LOKI_URL:-http://loki:3100}/loki/api/v1/push</url>
         </http>
         <format>
             <label>
@@ -25,6 +26,22 @@
             </message>
         </format>
     </appender>
+
+    <!-- Reduce noise from frameworks -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.springframework.amqp" level="WARN"/>
+    <logger name="org.springframework.data" level="WARN"/>
+    <logger name="org.springframework.security" level="WARN"/>
+    <logger name="org.springframework.r2dbc" level="WARN"/>
+    <logger name="io.r2dbc" level="WARN"/>
+    <logger name="io.micrometer" level="WARN"/>
+    <logger name="org.apache" level="WARN"/>
+
+    <!-- DEBUG for our application code -->
+    <logger name="campaign" level="DEBUG"/>
+    <logger name="campaign.app" level="DEBUG"/>
+    <logger name="campaign.core" level="DEBUG"/>
+    <logger name="campaign.detail" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>

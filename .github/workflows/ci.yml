@@ -1,0 +1,147 @@
+name: LeadGen CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+# Environment variables used across all jobs
+env:
+  JAVA_VERSION: '21'
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/leadgen
+
+jobs:
+  
+  # JOB 1: Test all services
+  
+  test:
+    name: Test Services
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Download the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Java 21
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      # Step 3: Cache Gradle dependencies (faster builds)
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      # Step 4: Test FormSchema Service
+      - name: Test FormSchema Service
+        working-directory: ./formschema-service
+        run: ./gradlew test --no-daemon
+
+      # Step 5: Test Submission Service
+      - name: Test Submission Service
+        working-directory: ./submission-service
+        run: ./gradlew test --no-daemon
+
+      # Step 6: Test Campaign Service
+      - name: Test Campaign Service
+        working-directory: ./campaign-service
+        run: ./gradlew test --no-daemon
+
+      # Step 7: Test API Gateway
+      - name: Test API Gateway
+        working-directory: ./api-gateway
+        run: ./gradlew test --no-daemon
+
+  
+  # JOB 2: Build Docker images
+  
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: test  # Only run if tests pass
+
+    # pushing to GitHub Container Registry
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        service:
+          - name: api-gateway
+            context: ./api-gateway
+          - name: formschema-service
+            context: ./formschema-service
+          - name: submission-service
+            context: ./submission-service
+          - name: campaign-service
+            context: ./campaign-service
+
+    steps:
+      # Step 1: Download the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Docker Buildx
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Step 3: Login to GitHub Container Registry
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 4: Generate image tags
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service.name }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # Step 5: Build and push Docker image
+      - name: Build and push ${{ matrix.service.name }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.context }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  
+  # JOB 3: Summary 
+  
+  summary:
+    name: Pipeline Summary
+    runs-on: ubuntu-latest
+    needs: [test, build]
+    if: always()
+
+    steps:
+      - name: Summary
+        run: |
+          echo "## Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY

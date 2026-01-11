@@ -1,0 +1,46 @@
+# PRODUCTION: api-gateway standalone deployment
+# All backend services are external and passed via environment variables
+
+services:
+  api-gateway:
+    image: ${REGISTRY:-local}/api-gateway:${VERSION:-latest}
+    container_name: api-gateway
+    ports:
+      - "${APP_PORT:-8090}:8090"
+    environment:
+      # Redis (internal for rate limiting/caching)
+      - REDIS_HOST=gateway-redis
+      - REDIS_PORT=6379
+      # JWT/Keycloak (external)
+      - JWT_ISSUER_URI=${JWT_ISSUER_URI}
+      - JWT_JWK_URI=${JWT_JWK_URI}
+      - KEYCLOAK_URL=${KEYCLOAK_URL}
+      - KEYCLOAK_REALM=${KEYCLOAK_REALM:-leadgen}
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+      # Backend service URLs (external)
+      - FORMSCHEMA_SERVICE_URI=${FORMSCHEMA_SERVICE_URI}
+      - SUBMISSION_SERVICE_URI=${SUBMISSION_SERVICE_URI}
+      - CAMPAIGN_SERVICE_URI=${CAMPAIGN_SERVICE_URI}
+      # OpenTelemetry (optional)
+      - OTEL_SERVICE_NAME=api-gateway
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_ENDPOINT:-}
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
+    depends_on:
+      - gateway-redis
+    restart: unless-stopped
+    networks:
+      - gateway-network
+
+  gateway-redis:
+    image: redis:alpine
+    container_name: gateway-redis
+    restart: unless-stopped
+    networks:
+      - gateway-network
+
+networks:
+  gateway-network:
+    driver: bridge

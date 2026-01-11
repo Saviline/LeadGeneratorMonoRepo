@@ -44,8 +44,7 @@ public class SubmissionController {
         HttpStatus httpStatus = result.getStatus() == SubmissionStatus.VALID
             ? HttpStatus.CREATED
             : HttpStatus.UNPROCESSABLE_ENTITY;
-            
-                //Claude: It needs to send back all reasons for rejection, so they can fix it, which is not sensitive or secuirty breach for us. 
+
         return ResponseEntity.status(httpStatus).body(SubmissionResponse.builder()
             .submissionId(result.getSubmissionId())
             .status(result.getStatus().name())

@@ -1,3 +1,6 @@
+# Environment variables (secrets)
+.env
+
 # Ignore Gradle project-specific cache directory
 .gradle
 

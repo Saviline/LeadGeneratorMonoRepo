@@ -1,6 +1,8 @@
 package submission.detail.mongodb;
 
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 
 import lombok.RequiredArgsConstructor;
 import submission.core.domain.Submission;
@@ -17,7 +19,9 @@ public class MongoDBSubmissionRepository implements IRepositorySubmission {
      }
 
      @Override
-     public Submission getById(String id) {
-        return mongoTemplate.findById(id, Submission.class);
+     public Submission getById(String id, String customerId) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("submissionId").is(id).and("customerId").is(customerId));
+        return mongoTemplate.findOne(query, Submission.class);
      }
 }

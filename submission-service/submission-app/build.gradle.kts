@@ -21,6 +21,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.micrometer:micrometer-registry-prometheus")
+    implementation("com.github.loki4j:loki-logback-appender:1.5.1")
 
     testImplementation(platform("org.testcontainers:testcontainers-bom:1.19.7"))
     testImplementation("org.testcontainers:junit-jupiter")
