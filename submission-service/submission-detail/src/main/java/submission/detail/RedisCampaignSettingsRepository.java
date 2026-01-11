@@ -8,8 +8,6 @@ import submission.core.ports.ICampaignSettingsRepository;
 import java.util.List;
 import java.util.Optional;
 
-//Claude: Where are we configuring Persistence and what method to use and all other configurations?
-
 @RequiredArgsConstructor
 public class RedisCampaignSettingsRepository implements ICampaignSettingsRepository {
 
@@ -34,7 +32,6 @@ public class RedisCampaignSettingsRepository implements ICampaignSettingsReposit
     public Optional<CampaignSettings> findByCustomerIdAndCampaignId(String customerId, String campaignId) {
         String key = buildKey(customerId, campaignId);
 
-        //Claude: why are these objects?
         Object formSchemaId = redisTemplate.opsForHash().get(key, "formSchemaId");
         if (formSchemaId == null) {
             return Optional.empty();

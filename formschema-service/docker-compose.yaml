@@ -1,21 +1,34 @@
-# PRODUCTION: formschema-service with its own dependencies only
-# External services (RabbitMQ) are passed via environment variables
+# PRODUCTION: formschema-service standalone deployment
+# External services (RabbitMQ, Keycloak) are passed via environment variables
 
 services:
   formschema-app:
     image: ${REGISTRY:-local}/formschema-service:${VERSION:-latest}
     container_name: formschema-app
     ports:
-      - "8080:8080"
+      - "${APP_PORT:-8080}:8080"
     environment:
+      # MongoDB (internal)
       - SPRING_DATA_MONGODB_URI=mongodb://formschema-mongo:27017/formschema_db
+      # RabbitMQ (external)
       - SPRING_RABBITMQ_HOST=${RABBITMQ_HOST}
       - SPRING_RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
       - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER}
-      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASS}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      # JWT/Keycloak (external)
+      - JWT_ISSUER_URI=${JWT_ISSUER_URI}
+      - JWT_JWK_URI=${JWT_JWK_URI}
+      # OpenTelemetry (optional)
+      - OTEL_SERVICE_NAME=formschema-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_ENDPOINT:-}
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
     depends_on:
       - formschema-mongo
     restart: unless-stopped
+    networks:
+      - formschema-network
 
   formschema-mongo:
     image: mongo:7
@@ -23,6 +36,12 @@ services:
     volumes:
       - formschema-mongo-data:/data/db
     restart: unless-stopped
+    networks:
+      - formschema-network
 
 volumes:
   formschema-mongo-data:
+
+networks:
+  formschema-network:
+    driver: bridge

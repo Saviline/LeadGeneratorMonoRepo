@@ -4,8 +4,8 @@ services:
     container_name: rabbitmq
     hostname: rabbitmq
     environment:
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASS=user
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-user}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-user}
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -40,8 +40,8 @@ services:
     image: grafana/grafana:latest
     container_name: grafana
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-admin}
       - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
     volumes:
       - grafana-data:/var/lib/grafana
@@ -60,8 +60,8 @@ services:
     container_name: keycloak
     command: start-dev
     environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin}
     ports:
       - "8080:8080"
     volumes:
@@ -95,6 +95,7 @@ services:
     command: ["-config.file=/etc/tempo/config.yaml"]
     networks:
       - leadgen-network
+      
   ################################################################################################################################
 
   formschema-app:
@@ -108,8 +109,8 @@ services:
       - SPRING_DATA_MONGODB_URI=mongodb://formschema-mongo:27017/formschema_db
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=user
-      - SPRING_RABBITMQ_PASSWORD=user
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-user}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-user}
       - JWT_ISSUER_URI=http://keycloak:8080/realms/leadgen
       - JWT_JWK_URI=http://keycloak:8080/realms/leadgen/protocol/openid-connect/certs
       - OTEL_SERVICE_NAME=formschema-service
@@ -117,19 +118,13 @@ services:
       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
       - OTEL_METRICS_EXPORTER=none
       - OTEL_LOGS_EXPORTER=none
+      - LOKI_URL=http://loki:3100
     depends_on:
       - formschema-mongo
       - rabbitmq
       - keycloak
       - tempo
       - loki
-    logging:
-      driver: loki
-      options:
-        loki-url: "http://host.docker.internal:3100/loki/api/v1/push"
-        loki-retries: "5"
-        loki-batch-size: "400"
-        labels: "service=formschema-service"
     networks:
       - leadgen-network
 
@@ -158,25 +153,32 @@ services:
       - REDIS_PORT=6379
       - FORMSCHEMA_SERVICE_URI=http://formschema-app:8080
       - SUBMISSION_SERVICE_URI=http://submission-app:8080
+      - CAMPAIGN_SERVICE_URI=http://campaign-app:8080
       - OTEL_SERVICE_NAME=api-gateway
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
       - OTEL_METRICS_EXPORTER=none
       - OTEL_LOGS_EXPORTER=none
+      
+      ## keycloak env vars
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+      
+      - KEYCLOAK_REALM=leadgen
+      - KEYCLOAK_URL=http://keycloak:8080
+
+      ##Loki
+      - LOKI_URL=http://loki:3100
+
+
     depends_on:
       - gateway-redis
       - keycloak
       - tempo
       - formschema-app
       - submission-app
+      - campaign-app
       - loki
-    logging:
-      driver: loki
-      options:
-        loki-url: "http://host.docker.internal:3100/loki/api/v1/push"
-        loki-retries: "5"
-        loki-batch-size: "400"
-        labels: "service=api-gateway"
     networks:
       - leadgen-network
 
@@ -200,8 +202,8 @@ services:
       - SPRING_DATA_MONGODB_URI=mongodb://submission-mongo:27017/submission_db
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=user
-      - SPRING_RABBITMQ_PASSWORD=user
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-user}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-user}
       - SPRING_DATA_REDIS_HOST=submission-redis
       - SPRING_DATA_REDIS_PORT=6379
       - JWT_ISSUER_URI=http://keycloak:8080/realms/leadgen
@@ -211,6 +213,7 @@ services:
       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
       - OTEL_METRICS_EXPORTER=none
       - OTEL_LOGS_EXPORTER=none
+      - LOKI_URL=http://loki:3100
     depends_on:
       - submission-mongo
       - submission-redis
@@ -218,13 +221,6 @@ services:
       - keycloak
       - tempo
       - loki
-    logging:
-      driver: loki
-      options:
-        loki-url: "http://host.docker.internal:3100/loki/api/v1/push"
-        loki-retries: "5"
-        loki-batch-size: "400"
-        labels: "service=submission-service"
     networks:
       - leadgen-network
 
@@ -246,9 +242,64 @@ services:
     networks:
       - leadgen-network
 
+  campaign-app:
+    build:
+      context: ./campaign-service
+      dockerfile: Dockerfile
+    container_name: campaign-app
+    ports:
+      - "8084:8080"
+    environment:
+      - SPRING_R2DBC_URL=r2dbc:postgresql://campaign-postgres:5432/campaign_db
+      - SPRING_R2DBC_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_R2DBC_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - FORMSCHEMA_SERVICE_URL=http://formschema-app:8080
+      - CUSTOMER_SERVICE_URL=http://customer-service:8084
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-user}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-user}
+      - JWT_ISSUER_URI=http://keycloak:8080/realms/leadgen
+      - JWT_JWK_URI=http://keycloak:8080/realms/leadgen/protocol/openid-connect/certs
+      - OTEL_SERVICE_NAME=campaign-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
+      - LOKI_URL=http://loki:3100
+
+    depends_on:
+      - campaign-postgres
+      - rabbitmq
+      - keycloak
+      - tempo
+      - loki
+    networks:
+      - leadgen-network
+
+  campaign-postgres:
+    image: postgres:16-alpine
+    container_name: campaign-postgres
+    environment:
+      - POSTGRES_DB=campaign_db
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5433:5432"
+    volumes:
+      - campaign-postgres-data:/var/lib/postgresql/data
+    networks:
+      - leadgen-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   formschema-mongo-data:
   submission-mongo-data:
+  campaign-postgres-data:
   prometheus-data:
   grafana-data:
   keycloak-data:

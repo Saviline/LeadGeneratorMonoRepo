@@ -15,8 +15,12 @@ public class FakeSubmissionRepository implements IRepositorySubmission{
     }
 
     @Override
-    public Submission getById(String id) {
-        return repository.get(id);
+    public Submission getById(String id, String customerId) {
+        Submission submission = repository.get(id);
+        if (submission != null && customerId.equals(submission.getCustomerId())) {
+            return submission;
+        }
+        return null;
     }
-    
+
 }

@@ -1,17 +1,17 @@
 server:
-  port: 8082
+  port: ${PORT:8080}
 
 spring:
   application:
     name: formschema-service
   data:
     mongodb:
-      uri: mongodb://localhost:27017/formschema_db
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/formschema_db}
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: user
-    password: user
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:user}
+    password: ${SPRING_RABBITMQ_PASSWORD:user}
   security:
     oauth2:
       resourceserver:

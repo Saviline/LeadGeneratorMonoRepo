@@ -1,20 +1,20 @@
 server:
-  port: 8083
+  port: ${PORT:8080}
 
 spring:
   application:
     name: campaign-service
 
   r2dbc:
-    url: r2dbc:postgresql://localhost:5432/campaign
-    username: ${POSTGRES_USER:postgres}
-    password: ${POSTGRES_PASSWORD:mkf59rnd}
+    url: ${SPRING_R2DBC_URL:r2dbc:postgresql://localhost:5432/campaign_db}
+    username: ${SPRING_R2DBC_USERNAME:postgres}
+    password: ${SPRING_R2DBC_PASSWORD:postgres}
 
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: user
-    password: user
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:user}
+    password: ${SPRING_RABBITMQ_PASSWORD:user}
 
   security:
     oauth2:
@@ -32,22 +32,6 @@ services:
 rabbitmq:
   exchange: leadgen.exchange
   routing-key: campaign.campaign.updated
-
-logging:
-  level:
-    root: INFO
-    campaign: DEBUG
-    org.springframework: WARN
-    org.springframework.amqp: INFO
-    io.r2dbc: INFO
-  file:
-    name: logs/${spring.application.name}.log
-  logback:
-    rollingpolicy:
-      max-file-size: 10MB
-      max-history: 7
-  pattern:
-    console: "%d{HH:mm:ss} %highlight(%-5level) %cyan(%logger{20}) - %msg%n"
 
 management:
   tracing:

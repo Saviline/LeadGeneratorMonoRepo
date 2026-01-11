@@ -1,21 +1,67 @@
-# MongoDB Configuration
+server:
+  port: ${PORT:8080}
+
 spring:
   application:
     name: formschema-service
   data:
     mongodb:
-      uri: mongodb://localhost:27017/formschema_db
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/formschema_db}
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: user
-    password: user
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:user}
+    password: ${SPRING_RABBITMQ_PASSWORD:user}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/leadgen}
+          jwk-set-uri: ${JWT_JWK_URI:http://localhost:8080/realms/leadgen/protocol/openid-connect/certs}
 
 rabbitmq:
   exchange: leadgen.exchange
-  validation:
-    queue: q.submission.schema.validation
-    routing-key: schema.validation.updated
-  business:
-    queue: q.lead.schema.business
-    routing-key: schema.business.updated
+  routing-key: formschema.schema.updated
+
+logging:
+  level:
+    root: INFO
+    formschema: DEBUG
+    org.springframework: WARN
+    org.springframework.amqp: INFO
+    org.mongodb: WARN
+  file:
+    name:  logs/${spring.application.name}.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
+  pattern:
+    console: "%d{HH:mm:ss} %highlight(%-5level) %cyan(%logger{20}) - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus, metrics
+      base-path: /actuator
+  endpoint:
+    metrics:
+      tags:
+        application: ${spring.application.name}
+      distribution:
+        percentiles-histogram:
+          http.server.requests: true
+        percentiles:
+          http.server.requests: 0.5, 0.95, 0.99
+    health:
+      show-details: always
+  health:
+    mongo:
+      enabled: true
+    rabbit:
+      enabled: true
+    diskspace:
+      enabled: true
+      threshold: 100MB
+      
